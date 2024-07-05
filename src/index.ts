@@ -1,4 +1,4 @@
-import { Node, $stream, $queue, $ins, $outs, $write } from './node.js';
+import { Node, $stream, $queue, $ins, $outs, $write, $size } from './node.js';
 import { BufferToObject } from './commons/buffer_to_object.js';
 import { ObjectToBuffer } from './commons/object_to_buffer.js';
 import { BufferToString } from './commons/buffer_to_string.js';
@@ -20,5 +20,6 @@ export {
     $queue,
     $ins,
     $outs,
-    $write
+    $write,
+    $size,
 };
