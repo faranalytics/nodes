@@ -7,6 +7,7 @@ export const $ins = Symbol('ins');
 export const $outs = Symbol('outs');
 export const $write = Symbol('write');
 export const $size = Symbol('size');
+
 export class Node<InT, OutT> {
 
     protected [$stream]: stream.Writable | stream.Readable;
@@ -60,17 +61,20 @@ export class Node<InT, OutT> {
         if (!this[$stream].closed && this[$stream] instanceof stream.Writable) {
             if (!this[$stream].writableNeedDrain) {
                 if (this[$queue].length === 0) {
-                    if (!this[$stream].write(data, encoding ?? 'utf-8')) {
+                    if (this[$stream].write(data, encoding ?? 'utf-8')) {
+                        return;
+                    }
+                    else {
                         await once(this[$stream], 'drain');
                     }
                 }
                 else {
                     this[$queue].push(data);
-                    this[$size] += !this[$stream].writableObjectMode  && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+                    this[$size] += !this[$stream].writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
                 }
                 while (this[$queue].length) {
                     const data = this[$queue].shift();
-                    this[$size] -= !this[$stream].writableObjectMode  && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+                    this[$size] -= !this[$stream].writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
                     if (!this[$stream].write(data, encoding ?? 'utf-8')) {
                         await once(this[$stream], 'drain');
                     }
@@ -78,7 +82,7 @@ export class Node<InT, OutT> {
             }
             else {
                 this[$queue].push(data);
-                this[$size] += !this[$stream].writableObjectMode  && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+                this[$size] += !this[$stream].writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
             }
         }
     }

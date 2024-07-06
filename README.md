@@ -40,7 +40,7 @@ A `Node` is a component of a graph-like data transformation pipeline.  Each `Nod
 
 ## Examples
 
-### *A Graph API Pattern Logger Implementation* <sup><sup>(example)</sup></sup>
+### *A Graph API Pattern Logger Implementation* <sup><sup>\</example\></sup></sup>
 Please see the [Streams Logger](https://github.com/faranalytics/streams-logger) implementation.
 
 ## API
