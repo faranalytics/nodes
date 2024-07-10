@@ -41,8 +41,11 @@ export class Node<InT, OutT> {
             node[$stream].once('error', () => {
                 if (this[$stream] instanceof stream.Readable && node[$stream] instanceof stream.Writable) {
                     this[$stream].unpipe(node[$stream]);
+                    this[$outs]?.splice(this[$outs].indexOf(node), 1);
+                    if (this[$outs]?.length) {
+                        this[$stream].resume();
+                    }
                 }
-                this[$outs]?.splice(this[$outs].indexOf(node), 1);
             });
         }
         return this;
@@ -52,6 +55,11 @@ export class Node<InT, OutT> {
         for (const node of nodes) {
             if (this[$stream] instanceof stream.Readable && node[$stream] instanceof stream.Writable) {
                 this[$stream].unpipe(node[$stream]);
+                this[$outs]?.splice(this[$outs].indexOf(node), 1);
+                node[$ins]?.splice(node[$ins].indexOf(this), 1);
+                if (this[$outs]?.length) {
+                    this[$stream].resume();
+                }
             }
         }
         return this;
