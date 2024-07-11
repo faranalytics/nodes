@@ -1,5 +1,5 @@
 import * as stream from 'node:stream';
-import { Node, $write, $stream } from '../node.js';
+import { Node, $write, $stream, $ins, $outs } from '../node.js';
 
 export interface ObjectToStringOptions {
     encoding: NodeJS.BufferEncoding;
@@ -17,39 +17,46 @@ export class BufferToString extends Node<Buffer, string> {
                 writableObjectMode: false,
                 readableObjectMode: true,
                 transform: async (chunk: Buffer | string, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
-                    if (!Buffer.isBuffer(chunk)) {
-                        chunk = Buffer.from(chunk, 'utf-8');
-                    }
-
-                    this.ingressQueue = Buffer.concat([this.ingressQueue, chunk]);
-
-                    if (this.messageSize === null) {
-                        this.messageSize = this.ingressQueue.readUintBE(0, 6);
-                    }
-
-                    if (this.ingressQueue.length < this.messageSize) {
-                        callback();
-                        return;
-                    }
-
-                    while (this.ingressQueue.length >= this.messageSize) {
-                        const buf = this.ingressQueue.subarray(6, this.messageSize);
-                        this.ingressQueue = this.ingressQueue.subarray(this.messageSize, this.ingressQueue.length);
-                        const message = buf.toString(this.encoding);
-
-                        if (this[$stream] instanceof stream.Readable) {
-                            this[$stream].push(message);
+                    try {
+                        if (!Buffer.isBuffer(chunk)) {
+                            chunk = Buffer.from(chunk, 'utf-8');
                         }
 
-                        if (this.ingressQueue.length > 6) {
+                        this.ingressQueue = Buffer.concat([this.ingressQueue, chunk]);
+
+                        if (this.messageSize === null) {
                             this.messageSize = this.ingressQueue.readUintBE(0, 6);
                         }
-                        else {
-                            this.messageSize = null;
-                            break;
+
+                        if (this.ingressQueue.length < this.messageSize) {
+                            callback();
+                            return;
+                        }
+
+                        while (this.ingressQueue.length >= this.messageSize) {
+                            const buf = this.ingressQueue.subarray(6, this.messageSize);
+                            this.ingressQueue = this.ingressQueue.subarray(this.messageSize, this.ingressQueue.length);
+                            const message = buf.toString(this.encoding);
+
+                            if (this[$stream] instanceof stream.Readable) {
+                                this[$stream].push(message);
+                            }
+
+                            if (this.ingressQueue.length > 6) {
+                                this.messageSize = this.ingressQueue.readUintBE(0, 6);
+                            }
+                            else {
+                                this.messageSize = null;
+                                break;
+                            }
+                        }
+                        callback();
+                    }
+                    catch (err) {
+                        if (err instanceof Error) {
+                            callback(err);
                         }
                     }
-                    callback();
                 }
             }
         }));
@@ -61,5 +68,12 @@ export class BufferToString extends Node<Buffer, string> {
 
     async write(data: Buffer): Promise<void> {
         await super[$write](data);
+    }
+    get ins() {
+        return this[$ins];
+    }
+
+    get outs() {
+        return this[$outs];
     }
 }

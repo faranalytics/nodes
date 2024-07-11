@@ -10,7 +10,7 @@ Nodes provides an intuitive framework for constructing data transformation graph
 
 - A type-safe graph-like API pattern for building data transformation graphs based on Node.js streams.
 - Consume any native Node.js Readable, Writable, Duplex, or Transform stream and add it to your graph.
-- Error propagation and selective termination of inoperable graph components.
+- Error handling and selective termination of inoperable graph components.
 - Automatic message queueing in order to assist with handling of backpressure.
 
 ## Table of Contents
@@ -64,6 +64,17 @@ Returns: `<Node<InT, OutT>>`
 - data `<InT>` Data to write to the writable side of the stream.
 
 Returns: `<Promise<void>>`
+
+### The Node Config Settings Object
+
+**Config.setErrorHandler(errorHandler)**
+- errorHandler `<ErrorHandler>` A error handler for handling internal Errors. **Default: `console.error`**
+
+Returns: `<void>`
+
+**Config.getConfig()**
+
+Returns: `<ConfigOptions>` A an object that contains the current configuration settings.
 
 ## How-Tos
 
@@ -119,3 +130,17 @@ If you have a stream that is backpressuring, you can increase the high water mar
 
 ### Avoid reuse of Node instances (*unless you know what you are doing!*).
 Reusing the same Node instance can result in unexpected phenomena.  If the same Node instance is used in different locations in your graph, you need to think carefully about the resulting edges that are connected to both the input and the output of the Node instance.  Most of the time if you need to use the same class of Node more than once, it's advisable to create a new instance for each use.
+
+## Error Handling
+Node may be used in diverse contexts, each with specific requirements.  Node *should* never throw if the API is used in accordance with the documentation; however, phenomena *happens*.  
+
+Node defaults to logging its errors to the console.  If your application requires that errors throw, you can pass an error handler to each `Node` constructor that rethrows the Error.  
+
+### Optionally configure all `Node` errors to be thrown.
+You can set a thrower globally by modifying the `Config` defaults.
+```ts
+import { Config } from '@farar/nodes';
+Config.setErrorHandler((err: Error) => {
+    throw err;
+});
+```

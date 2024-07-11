@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as stream from 'node:stream';
 import * as net from 'node:net';
-import { Node, $write, $stream } from '../node.js';
+import { Node, $write, $stream, $ins, $outs } from '../node.js';
 
 export interface SocketHandlerOptions {
     socket: net.Socket;
@@ -29,15 +29,22 @@ export class SocketHandler<InT, OutT> extends Node<InT, OutT> {
                     this.push();
                 },
                 write: (chunk: InT, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
-                    const data = this.serializeMessage(chunk);
-                    const size = Buffer.alloc(6, 0);
-                    size.writeUIntBE(data.length + 6, 0, 6);
-                    const buf = Buffer.concat([size, data]);
-                    if (!this.socket.write(buf)) {
-                        this.socket.once('drain', callback);
+                    try {
+                        const data = this.serializeMessage(chunk);
+                        const size = Buffer.alloc(6, 0);
+                        size.writeUIntBE(data.length + 6, 0, 6);
+                        const buf = Buffer.concat([size, data]);
+                        if (!this.socket.write(buf)) {
+                            this.socket.once('drain', callback);
+                        }
+                        else {
+                            callback();
+                        }
                     }
-                    else {
-                        callback();
+                    catch (err) {
+                        if (err instanceof Error) {
+                            callback(err);
+                        }
                     }
                 }
             }
@@ -89,5 +96,12 @@ export class SocketHandler<InT, OutT> extends Node<InT, OutT> {
 
     protected deserializeMessage(data: Buffer): OutT {
         return <OutT>JSON.parse(data.toString('utf-8'), this.reviver);
+    }
+    get ins() {
+        return this[$ins];
+    }
+
+    get outs() {
+        return this[$outs];
     }
 }

@@ -1,10 +1,10 @@
 {
   "name": "@farar/nodes",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "cd ./tests/test && npm install && npm run clean:build && npm start",
+    "test": "npm run clean:build && npm install --prefix ./test && npm run clean:build --prefix ./test && npm start --prefix ./test",
     "clean": "rm -rf ./dist/*",
     "build": "tsc --build .",
     "clean:build": "npm run clean && npm run build",
