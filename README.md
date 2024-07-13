@@ -4,7 +4,7 @@ Nodes provides a framework for building type-safe data transformation graphs usi
 
 ## Introduction
 
-Nodes provides an intuitive framework for constructing data transformation graphs using native Node.js streams.  You can use the built-in library of commonly used data transformation `Nodes` or implement your own.
+Nodes provides an intuitive framework for constructing data transformation graphs using native Node.js streams.  You can use the built-in library of commonly used data transformation `Node` classes or implement your own.
 
 ### Features
 
@@ -38,7 +38,7 @@ npm install @farar/nodes
 
 ### Node
 
-A `Node` is a component of a graph-like data transformation pipeline.  Each `Node` is responsible for transforming its input into an output that can be consumed by its connected Nodes.  By connecting `Nodes` into a network, sophisticated graph-like data transformation pipelines can be constructed.
+A `Node` is a component of a graph-like data transformation pipeline.  Each `Node` is responsible for transforming its input into an output that can be consumed by its connected `Node` instances.  By connecting `Nodes` into a network, sophisticated graph-like data transformation pipelines can be constructed.
 
 ## Examples
 
@@ -69,7 +69,7 @@ Returns: `<Node<InT, OutT>>`
 
 Returns: `<Promise<void>>`
 
-### The Node Config Settings Object
+### The Nodes Config Settings Object
 
 **Config.setErrorHandler(errorHandler)**
 - errorHandler `<ErrorHandler>` A error handler for handling internal Errors. **Default: `console.error`**
@@ -94,16 +94,23 @@ For example, the following `StringToNumber` implementation will convert a numeri
 import * as stream from 'node:stream';
 import { Node } from '@farar/nodes';
 
-class StringToNumber extends Node<string, number> {
+export class StringToNumber extends Node<string, number> {
 
     constructor(options: stream.TransformOptions) {
-        super(new stream.Node({
+        super(new stream.Transform({
             ...options, ...{
                 writableObjectMode: true,
                 readableObjectMode: true,
-                transform: (chunk: string, encoding: BufferEncoding, callback: stream.NodeCallback) => {
-                    const result = parseFloat(chunk.toString());
-                    callback(null, result);
+                transform: (chunk: string, encoding: BufferEncoding, callback: stream.TransformCallback) => {
+                    try {
+                        const result = parseFloat(chunk.toString());
+                        callback(null, result);
+                    }
+                    catch (err) {
+                        if (err instanceof Error) {
+                            callback(err);
+                        }
+                    }
                 }
             }
         }));
@@ -132,13 +139,13 @@ If you have a stream that is backpressuring, you can increase the high water mar
 
 ## Best Practices
 
-### Avoid reuse of Node instances (*unless you know what you are doing!*).
-Reusing the same Node instance can result in unexpected phenomena.  If the same Node instance is used in different locations in your graph, you need to think carefully about the resulting edges that are connected to both the input and the output of the Node instance.  Most of the time if you need to use the same class of Node more than once, it's advisable to create a new instance for each use.
+### Avoid reuse of `Node` instances (*unless you know what you are doing!*).
+Reusing the same `Node` instance can result in unexpected phenomena.  If the same `Node` instance is used in different locations in your graph, you need to think carefully about the resulting edges that are connected to both the input and the output of the `Node` instance.  Most of the time if you need to use the same class of `Node` more than once, it's advisable to create a new instance for each use.
 
 ## Error Handling
-Node may be used in diverse contexts, each with unique requirements.  Node *should* never throw if the API is used in accordance with the documentation; however, phenomena *happens*.  
+Nodes may be used in diverse contexts, each with unique requirements.  Nodes *should* never throw if the API is used in accordance with the documentation; however, *phenomena happens*.  
 
-Node defaults to logging its errors to the console.  If your application requires that errors throw, you have options:
+Nodes defaults to logging its errors to the console.  If your application requires that errors throw, you have options:
 
 1. Assign an error handler to a `NodeOptions` object, which rethrows an `Error`, and pass it into the `Node` constructor.
 2. Set an `errorHandler` on the `Config` object.

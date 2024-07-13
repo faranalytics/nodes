@@ -3,7 +3,7 @@ import * as stream from 'node:stream';
 import { Node, $ins, $outs } from '../index.js';
 
 
-export class AnyToVoid extends Node<any, never> {
+export class AnyToVoid<InT = any> extends Node<InT, never> {
 
     constructor() {
         super(new stream.Writable({

@@ -1,23 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from 'node:stream';
-import { once } from 'node:events';
-import { $write, Node, $ins, $outs } from '../node.js';
+import * as events from 'node:events';
+import { $stream, $write, Node, $ins, $outs } from '../index.js';
 
-export class ConsoleHandler<InT = any> extends Node<InT, never> {
+export class AnyToAnyEmitter<InT = any, OutT = any> extends Node<InT, OutT> {
 
-    constructor(options?: stream.WritableOptions) {
-        super(new stream.Writable({
+    public emitter: events.EventEmitter;
+
+    constructor(options?: stream.TransformOptions) {
+        super(new stream.Transform({
             ...options, ...{
                 objectMode: true,
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                write: async (chunk: unknown, encoding: BufferEncoding, callback: (error?: Error | null | undefined) => void) => {
+                transform: async (chunk: InT, encoding: BufferEncoding, callback: stream.TransformCallback) => {
                     try {
-                        if (typeof chunk == 'string' || chunk instanceof Buffer) {
-                            if (!process.stdout.write(chunk)) {
-                                await once(process.stdout, 'drain');
-                            }
-                        }
-                        callback();
+                        this.emitter.emit('data', chunk);
+                        callback(null, chunk);
                     }
                     catch (err) {
                         if (err instanceof Error) {
@@ -27,11 +25,15 @@ export class ConsoleHandler<InT = any> extends Node<InT, never> {
                 }
             }
         }));
+
+        this.emitter = new events.EventEmitter();
+        this[$stream].once('error', this.emitter.emit);
     }
 
     async write(data: any): Promise<void> {
         await super[$write](data);
     }
+
     get ins() {
         return this[$ins];
     }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from 'node:stream';
 import { $write, Node } from '../index.js';
 
@@ -5,7 +6,7 @@ export interface AnyTemporalToAnyOptions {
     time?: number;
 }
 
-export class AnyTemporalToAny<InT, OutT> extends Node<InT, OutT> {
+export class AnyTemporalToAny<InT = any, OutT = any> extends Node<InT, OutT> {
 
     constructor({ time = 1e3 }: AnyTemporalToAnyOptions) {
         super(new stream.Transform({

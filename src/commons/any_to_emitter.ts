@@ -3,7 +3,7 @@ import * as stream from 'node:stream';
 import * as events from 'node:events';
 import { $stream, $write, Node, $ins, $outs } from '../index.js';
 
-export class AnyToEmitter<InT> extends Node<InT, never> {
+export class AnyToEmitter<InT = any> extends Node<InT, never> {
 
     public emitter: events.EventEmitter;
 

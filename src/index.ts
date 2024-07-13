@@ -8,7 +8,8 @@ import { SocketHandler } from './commons/socket_handler.js';
 import { AnyToEmitter } from './commons/any_to_emitter.js';
 import { AnyToVoid } from './commons/any_to_void.js';
 import { AnyTransformToAny } from './commons/any_transform_to_any.js';
-import {AnyTemporalToAny} from './commons/any_temporal_to_any.js';
+import { AnyTemporalToAny } from './commons/any_temporal_to_any.js';
+import { AnyToAnyEmitter } from './commons/any_to_any_emitter.js';
 
 export {
     Config,
@@ -19,6 +20,7 @@ export {
     ConsoleHandler,
     SocketHandler,
     AnyToEmitter,
+    AnyToAnyEmitter,
     AnyToVoid,
     AnyTransformToAny,
     AnyTemporalToAny,

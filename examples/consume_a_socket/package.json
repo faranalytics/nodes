@@ -1,5 +1,5 @@
 {
-  "name": "data_transformation_node",
+  "name": "consume_a_socket",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",
@@ -17,7 +17,7 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
-    "@farar/nodes": "~0.0.1"
+    "@farar/nodes": "^0.1.0"
   },
   "type": "module",
   "devDependencies": {

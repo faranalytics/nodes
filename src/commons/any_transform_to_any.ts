@@ -6,7 +6,7 @@ export interface AnyTransformToAnyOptions {
     transform: (chunk: any) => Promise<any> | any;
 }
 
-export class AnyTransformToAny extends Node<any, any> {
+export class AnyTransformToAny<InT = any> extends Node<InT, any> {
 
     public transform: (chunk: any) => Promise<any> | any;
 
