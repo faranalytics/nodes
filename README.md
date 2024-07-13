@@ -25,6 +25,8 @@ Nodes provides an intuitive framework for constructing data transformation graph
     - [How to Consume a Readable, Writable, Duplex, or Transform Node.js Stream](#how-to-consume-a-readable-writable-duplex-or-transform-nodejs-stream)
 - [Backpressure](#backpressure)
 - [Best Practices](#best-practices)
+- [Error Handling](#error-handling)
+- [Test](#test)
 
 ## Installation
 
@@ -47,8 +49,10 @@ Please see the [Streams Logger](https://github.com/faranalytics/streams-logger) 
 
 ### The Node class.
 
-**new Nodes.Node\<InT, OutT\>(stream)**
+**new Nodes.Node\<InT, OutT\>(stream, options)**
 - `stream` `<stream.Writable | stream.Readable>` An instance of a `Writable`, `Readable`, `Duplex`, or `Transform` Node.js stream.
+- `options` `<NodeOptions>`
+    - `errorHandler` `<(err: Error, ...params: Array<unknown>) => void>` An optional error handler that will be used in the event of an internal Error.
 
 *public* **node.connect(...nodes)**
 - nodes `<Array<T>>` An array of `Node<OutT, unknown>` to be connected to this `Node`.
@@ -132,9 +136,12 @@ If you have a stream that is backpressuring, you can increase the high water mar
 Reusing the same Node instance can result in unexpected phenomena.  If the same Node instance is used in different locations in your graph, you need to think carefully about the resulting edges that are connected to both the input and the output of the Node instance.  Most of the time if you need to use the same class of Node more than once, it's advisable to create a new instance for each use.
 
 ## Error Handling
-Node may be used in diverse contexts, each with specific requirements.  Node *should* never throw if the API is used in accordance with the documentation; however, phenomena *happens*.  
+Node may be used in diverse contexts, each with unique requirements.  Node *should* never throw if the API is used in accordance with the documentation; however, phenomena *happens*.  
 
-Node defaults to logging its errors to the console.  If your application requires that errors throw, you can pass an error handler to each `Node` constructor that rethrows the Error.  
+Node defaults to logging its errors to the console.  If your application requires that errors throw, you have options:
+
+1. Assign an error handler to a `NodeOptions` object, which rethrows an `Error`, and pass it into the `Node` constructor.
+2. Set an `errorHandler` on the `Config` object.
 
 ### Optionally configure all `Node` errors to be thrown.
 You can set a thrower globally by modifying the `Config` defaults.
@@ -143,4 +150,14 @@ import { Config } from '@farar/nodes';
 Config.setErrorHandler((err: Error) => {
     throw err;
 });
+```
+## Test
+
+### Install dependencies.
+```bash
+npm install && npm update
+```
+### Run tests.
+```bash
+npm test
 ```
