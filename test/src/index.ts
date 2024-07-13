@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as net from 'node:net';
 import * as assert from 'node:assert';
 import { once } from 'node:events';
 import { after, describe, test } from 'node:test';
-import { ObjectToBuffer, BufferToObject, ConsoleHandler, SocketHandler, BufferToString, AnyToAnyEmitter, Node, Config, AnyTransformToAny, AnyToVoid, AnyTemporalToAny } from '@farar/nodes';
+import { ObjectToBuffer, BufferToObject, SocketHandler, BufferToString, AnyToAnyEmitter, Config, AnyTransformToAny, AnyToVoid, AnyTemporalToAny } from '@farar/nodes';
 
 Config.setErrorHandler((err: Error) => {
     throw err;
@@ -18,9 +16,6 @@ class Greeter {
 }
 
 const anyToVoid = new AnyToVoid();
-const anyToThrow = new AnyTransformToAny({ transform: (chunk) => { throw Error('Error'); } });
-const anyToThrowChild = new AnyToVoid();
-const anyToAnyEmitter = new AnyToAnyEmitter();
 const temporalNode = new AnyTemporalToAny<Greeter, Greeter>({ time: 1000 });
 const objectToBuffer1 = new ObjectToBuffer<Greeter>();
 const objectToBuffer2 = new ObjectToBuffer<Greeter>();
@@ -49,30 +44,30 @@ const node = temporalNode.connect(
     )
 );
 
-describe('Test all.', () => {
+describe('Test the integrity of data propagation and error handling.', async () => {
     after(() => {
         server.close();
         socket.destroy();
     });
-    describe('Test the integrity of data propagation.', () => {
-        bufferToString.connect(anyToAnyEmitter);
-        void test('Write a `Greeter` object and assert that it passed through the graph unscathed.', async () => {
-            const result = once(anyToAnyEmitter.emitter, 'data');
-            node.write(new Greeter());
-            assert.strictEqual((await result)[0], JSON.stringify(new Greeter()));
-        });
+    const anyToAnyEmitter = new AnyToAnyEmitter();
+
+    bufferToString.connect(anyToAnyEmitter);
+    test('Write a `Greeter` object and assert that it passed through the graph unscathed.', async () => {
+        const result = once(anyToAnyEmitter.emitter, 'data');
+        node.write(new Greeter());
+        assert.strictEqual((await result)[0], JSON.stringify(new Greeter()));
     });
 
-    describe('Test error handling.', () => {
-        void test('Test selective termination of inoperable graph components.', async () => {
-            anyToThrow.connect(anyToThrowChild);
-            bufferToString.connect(anyToThrow);
-            assert.strictEqual(anyToThrow.ins.length, 1);
-            assert.strictEqual(anyToThrow.outs.length, 1);
-            node.write(new Greeter());
-            await once(anyToAnyEmitter.emitter, 'data');
-            assert.strictEqual(anyToThrow.ins.length, 0);
-            assert.strictEqual(anyToThrow.outs.length, 0);
-        });
+    test('Test selective termination of inoperable graph components.', async () => {
+        const anyToThrow = new AnyTransformToAny({ transform: () => { throw Error('Error'); } });
+        const anyToThrowChild = new AnyToVoid();
+        anyToThrow.connect(anyToThrowChild);
+        bufferToString.connect(anyToThrow);
+        assert.strictEqual(anyToThrow.ins.length, 1);
+        assert.strictEqual(anyToThrow.outs.length, 1);
+        node.write(new Greeter());
+        await once(anyToAnyEmitter.emitter, 'data');
+        assert.strictEqual(anyToThrow.ins.length, 0);
+        assert.strictEqual(anyToThrow.outs.length, 0);
     });
 });
