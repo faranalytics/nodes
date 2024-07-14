@@ -4,9 +4,9 @@ import { once } from 'node:events';
 import { after, describe, test } from 'node:test';
 import { ObjectToBuffer, BufferToObject, SocketHandler, BufferToString, AnyToAnyEmitter, Config, AnyTransformToAny, AnyToVoid, AnyTemporalToAny } from '@farar/nodes';
 
-Config.setErrorHandler((err: Error) => {
+Config.errorHandler = (err: Error) => {
     throw err;
-});
+};
 
 class Greeter {
     public greeting: string;

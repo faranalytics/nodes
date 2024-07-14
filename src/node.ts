@@ -10,10 +10,6 @@ export const $write = Symbol('write');
 export const $size = Symbol('size');
 export const $errorHandler = Symbol('errorHandler');
 
-export interface NodeOptions {
-    errorHandler?: (err: Error, ...params: Array<unknown>) => void;
-}
-
 export class Node<InT, OutT> {
 
     protected [$stream]: stream.Writable | stream.Readable;
@@ -21,25 +17,24 @@ export class Node<InT, OutT> {
     protected [$ins]: Array<Node<unknown, InT>>;
     protected [$outs]: Array<Node<OutT, unknown>>;
     protected [$size]: number;
-    protected [$errorHandler]?: (err: Error, ...params: Array<unknown>) => void;
 
-    constructor(stream: stream.Writable | stream.Readable, options?: NodeOptions) {
+    constructor(stream: stream.Writable | stream.Readable) {
         this[$stream] = stream;
         this[$queue] = [];
         this[$ins] = [];
         this[$outs] = [];
         this[$size] = 0;
-        this[$errorHandler] = options?.errorHandler ?? Config.errorHandler;
 
         this[$stream].once('error', () => {
             try {
                 for (const _in of this[$ins]) {
                     _in.disconnect(this);
                 }
+                this.disconnect(...this[$outs]);
             }
             catch (err) {
-                if (this[$errorHandler] && err instanceof Error) {
-                    this[$errorHandler](err);
+                if (Config.errorHandler && err instanceof Error) {
+                    Config.errorHandler(err);
                 }
             }
         });
@@ -53,30 +48,11 @@ export class Node<InT, OutT> {
                 }
                 node[$ins]?.push(this);
                 this[$outs]?.push(node);
-                this[$stream].once('error', () => {
-                    this.disconnect(node);
-                });
-                node[$stream].once('error', () => {
-                    try {
-                        if (this[$stream] instanceof stream.Readable && node[$stream] instanceof stream.Writable) {
-                            this[$stream].unpipe(node[$stream]);
-                            this[$outs]?.splice(this[$outs].indexOf(node), 1);
-                            if (this[$outs]?.length) {
-                                this[$stream].resume();
-                            }
-                        }
-                    }
-                    catch (err) {
-                        if (this[$errorHandler] && err instanceof Error) {
-                            this[$errorHandler](err);
-                        }
-                    }
-                });
             }
         }
         catch (err) {
-            if (this[$errorHandler] && err instanceof Error) {
-                this[$errorHandler](err);
+            if (Config.errorHandler && err instanceof Error) {
+                Config.errorHandler(err);
             }
         }
         return this;
@@ -87,8 +63,14 @@ export class Node<InT, OutT> {
             for (const node of nodes) {
                 if (this[$stream] instanceof stream.Readable && node[$stream] instanceof stream.Writable) {
                     this[$stream].unpipe(node[$stream]);
-                    this[$outs]?.splice(this[$outs].indexOf(node), 1);
-                    node[$ins]?.splice(node[$ins].indexOf(this), 1);
+                    const nodeIndex = this[$outs].indexOf(node);
+                    if (nodeIndex != -1) {
+                        this[$outs]?.splice(nodeIndex, 1);
+                    }
+                    const thisIndex = node[$ins].indexOf(this);
+                    if (thisIndex != -1) {
+                        node[$ins]?.splice(thisIndex, 1);
+                    }
                     if (this[$outs]?.length) {
                         this[$stream].resume();
                     }
@@ -96,8 +78,8 @@ export class Node<InT, OutT> {
             }
         }
         catch (err) {
-            if (this[$errorHandler] && err instanceof Error) {
-                this[$errorHandler](err);
+            if (Config.errorHandler && err instanceof Error) {
+                Config.errorHandler(err);
             }
         }
         return this;
@@ -134,8 +116,8 @@ export class Node<InT, OutT> {
             }
         }
         catch (err) {
-            if (this[$errorHandler] && err instanceof Error) {
-                this[$errorHandler](err);
+            if (Config.errorHandler && err instanceof Error) {
+                Config.errorHandler(err);
             }
         }
     }
