@@ -17,7 +17,7 @@
     "node": ">=18.18.0"
   },
   "dependencies": {
-    "@farar/nodes": "^0.1.0"
+    "@farar/nodes": "../.."
   },
   "type": "module",
   "devDependencies": {

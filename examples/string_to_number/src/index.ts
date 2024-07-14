@@ -1,5 +1,5 @@
 import * as stream from 'node:stream';
-import { Node } from '@farar/nodes';
+import { Config, Node } from '@farar/nodes';
 
 export class StringToNumber extends Node<string, number> {
 
@@ -16,6 +16,7 @@ export class StringToNumber extends Node<string, number> {
                     catch (err) {
                         if (err instanceof Error) {
                             callback(err);
+                            Config.errorHandler(err);
                         }
                     }
                 }

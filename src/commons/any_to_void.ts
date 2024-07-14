@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from 'node:stream';
-import { Node, $ins, $outs } from '../index.js';
+import { Node, $ins, $outs } from '../node.js';
 
 
 export class AnyToVoid<InT = any> extends Node<InT, never> {

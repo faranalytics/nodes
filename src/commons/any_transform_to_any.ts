@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from 'node:stream';
-import { $write, Node, $ins, $outs } from '../index.js';
+import { $write, Node, $ins, $outs } from '../node.js';
 
 export interface AnyTransformToAnyOptions {
     transform: (chunk: any) => Promise<any> | any;

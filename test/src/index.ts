@@ -9,6 +9,8 @@ import { ObjectToBuffer, BufferToObject, SocketHandler, BufferToString, AnyToAny
 //     throw err;
 // };
 
+Config.debug = true;
+
 class Greeter {
     public greeting: string;
     constructor(greeating: string = 'Hello, World!', repeat: number = 1) {
@@ -66,8 +68,9 @@ await describe('Test the integrity of data propagation and error handling.', asy
         bufferToString.connect(anyToThrow);
         assert.strictEqual(anyToThrow.ins.length, 1);
         assert.strictEqual(anyToThrow.outs.length, 1);
+        const result = once(anyToAnyEmitter.emitter, 'data');
         await node.write(new Greeter());
-        await once(anyToAnyEmitter.emitter, 'data');
+        await result;
         assert.strictEqual(anyToThrow.ins.length, 0);
         assert.strictEqual(anyToThrow.outs.length, 0);
     });

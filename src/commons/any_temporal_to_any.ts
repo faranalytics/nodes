@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from 'node:stream';
-import { $write, Node } from '../index.js';
+import { $write, Node } from '../node.js';
 
 export interface AnyTemporalToAnyOptions {
     time?: number;

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from 'node:stream';
 import * as events from 'node:events';
-import { $stream, $write, Node, $ins, $outs } from '../index.js';
+import { $stream, $write, Node, $ins, $outs } from '../node.js';
 
 export class AnyToEmitter<InT = any> extends Node<InT, never> {
 

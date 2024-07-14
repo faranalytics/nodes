@@ -78,11 +78,7 @@ Returns: `<Promise<void>>`
 
 **Config.errorHandler** `<ErrorHandler>` An optional error handler.  **Default: `console.error`**
 
-**Config.verbose** `<boolean>` Optional announcement of activities to stdout. **Default: `false`**
-
-**Config.getConfig()**
-
-Returns: `<ConfigOptions>` An object that contains the current configuration settings.
+**Config.debug** `<boolean>` Announce internal activities e.g., connectiing and disconnecting from `Node` instances. **Default: `false`**
 
 ## How-Tos
 
@@ -95,35 +91,31 @@ For example, the following `StringToNumber` implementation will convert a numeri
 > NB: `writableObjectMode` and `readableObjectMode` are both set to true in this example; hence, the Node.js stream implementation will handle the input and output as objects. It's important that `writableObjectMode` and `readableObjectMode` accurately reflect the input and output types of your `Node`.
 
 ```ts
-import * as stream from "node:stream";
-import { Node } from "@farar/nodes";
+import * as stream from 'node:stream';
+import { Config, Node } from '@farar/nodes';
 
 export class StringToNumber extends Node<string, number> {
-  constructor(options: stream.TransformOptions) {
-    super(
-      new stream.Transform({
-        ...options,
-        ...{
-          writableObjectMode: true,
-          readableObjectMode: true,
-          transform: (
-            chunk: string,
-            encoding: BufferEncoding,
-            callback: stream.TransformCallback
-          ) => {
-            try {
-              const result = parseFloat(chunk.toString());
-              callback(null, result);
-            } catch (err) {
-              if (err instanceof Error) {
-                callback(err);
-              }
+
+    constructor(options: stream.TransformOptions) {
+        super(new stream.Transform({
+            ...options, ...{
+                writableObjectMode: true,
+                readableObjectMode: true,
+                transform: (chunk: string, encoding: BufferEncoding, callback: stream.TransformCallback) => {
+                    try {
+                        const result = parseFloat(chunk.toString());
+                        callback(null, result);
+                    }
+                    catch (err) {
+                        if (err instanceof Error) {
+                            callback(err);
+                            Config.errorHandler(err);
+                        }
+                    }
+                }
             }
-          },
-        },
-      })
-    );
-  }
+        }));
+    }
 }
 ```
 
@@ -155,9 +147,9 @@ Reusing the same `Node` instance can result in unexpected phenomena. If the same
 
 ## Error Handling
 
-Nodes may be used in diverse contexts, each with unique requirements. Nodes _should_ never throw if the API is used in accordance with the documentation. However, "_phenomena happens_" sometimes, hence you may choose to handle errors accordingly.
+Nodes may be used in diverse contexts, each with unique requirements. Nodes _should_ never throw if the API is used in accordance with the documentation. However, "_phenomena happens_"; hence, you may choose to handle errors accordingly!
 
-Nodes defaults to logging its errors to `process.stderr`. If your application requires that errors throw you may set an `errorHandler` on the `Config` object that does that.
+Nodes defaults to logging its errors to `process.stderr`. If your application requires that errors throw, you may set an `errorHandler` on the `Config` object that does that.  Alternatively, your handler may consume the `Error` and handle it otherwise.
 
 ### Optionally configure all internal `Node` errors to be thrown.
 
