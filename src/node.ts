@@ -1,6 +1,7 @@
 import * as stream from 'node:stream';
 import { once } from 'node:events';
 import { Config } from './index.js';
+import * as crypto from 'node:crypto';
 
 export const $stream = Symbol('stream');
 export const $queue = Symbol('queue');
@@ -9,6 +10,11 @@ export const $outs = Symbol('outs');
 export const $write = Symbol('write');
 export const $size = Symbol('size');
 export const $errorHandler = Symbol('errorHandler');
+export const $id = Symbol('id');
+
+export interface NodeOptions {
+    id: string;
+}
 
 export class Node<InT, OutT> {
 
@@ -17,13 +23,15 @@ export class Node<InT, OutT> {
     protected [$ins]: Array<Node<unknown, InT>>;
     protected [$outs]: Array<Node<OutT, unknown>>;
     protected [$size]: number;
+    protected [$id]: string;
 
-    constructor(stream: stream.Writable | stream.Readable) {
+    constructor(stream: stream.Writable | stream.Readable, options?: NodeOptions) {
         this[$stream] = stream;
         this[$queue] = [];
         this[$ins] = [];
         this[$outs] = [];
         this[$size] = 0;
+        this[$id] = options?.id ?? crypto.randomUUID();
 
         this[$stream].once('error', () => {
             try {
@@ -48,6 +56,9 @@ export class Node<InT, OutT> {
                 }
                 node[$ins]?.push(this);
                 this[$outs]?.push(node);
+                if (Config.verbose) {
+                    console.log(`Connected ${this[$id]} to ${node[$id]}.`);
+                }
             }
         }
         catch (err) {
@@ -65,11 +76,14 @@ export class Node<InT, OutT> {
                     this[$stream].unpipe(node[$stream]);
                     const nodeIndex = this[$outs].indexOf(node);
                     if (nodeIndex != -1) {
-                        this[$outs]?.splice(nodeIndex, 1);
+                        this[$outs]?.splice(nodeIndex, 1)[0];
                     }
                     const thisIndex = node[$ins].indexOf(this);
                     if (thisIndex != -1) {
                         node[$ins]?.splice(thisIndex, 1);
+                    }
+                    if (Config.verbose) {
+                        console.log(`Disconnected ${this[$id]} from ${node[$id]}.`);
                     }
                     if (this[$outs]?.length) {
                         this[$stream].resume();

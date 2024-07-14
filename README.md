@@ -76,15 +76,13 @@ Returns: `<Promise<void>>`
 
 ### The Nodes Config Settings Object
 
-**Config.setErrorHandler(errorHandler)**
+**Config.errorHandler** `<ErrorHandler>` An optional error handler.  **Default: `console.error`**
 
-- errorHandler `<ErrorHandler>` A error handler for handling internal Errors. **Default: `console.error`**
-
-Returns: `<void>`
+**Config.verbose** `<boolean>` Optional announcement of activities to stdout. **Default: `false`**
 
 **Config.getConfig()**
 
-Returns: `<ConfigOptions>` A an object that contains the current configuration settings.
+Returns: `<ConfigOptions>` An object that contains the current configuration settings.
 
 ## How-Tos
 
