@@ -1,14 +1,26 @@
+import EventEmitter from 'node:events';
 type ErrorHandler = (err: Error, ...params: Array<unknown>) => void;
 
-class Config {
+class Config extends EventEmitter {
 
-    public errorHandler: ErrorHandler;
-    public debug: boolean;
+    public _errorHandler: ErrorHandler;
+    public _debug: boolean;
 
     constructor() {
-        this.errorHandler = console.error;
-        this.debug = false;
+        super();
+        this._errorHandler = console.error;
+        this._debug = false;
+    }
+
+    set errorHandler(errorHandler: ErrorHandler) {
+        this._errorHandler = errorHandler;
+        this.emit('errorHandler', this._errorHandler);
+    }
+
+    set debug(debug: boolean) {
+        this._debug = debug;
+        this.emit('debug', this._debug);
     }
 }
 
-export const config = new Config();
+export default new Config();

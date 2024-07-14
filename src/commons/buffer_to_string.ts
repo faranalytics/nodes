@@ -1,7 +1,7 @@
 import * as stream from 'node:stream';
-import { Node, $write, $stream, $ins, $outs } from '../node.js';
+import { Node } from '../node.js';
 
-export interface ObjectToStringOptions {
+export interface BufferToStringOptions {
     encoding: NodeJS.BufferEncoding;
 }
 
@@ -11,9 +11,9 @@ export class BufferToString extends Node<Buffer, string> {
     public messageSize: number | null;
     public encoding?: NodeJS.BufferEncoding;
 
-    constructor({ encoding }: ObjectToStringOptions = { encoding: 'utf-8' }, options?: stream.TransformOptions) {
+    constructor({ encoding }: BufferToStringOptions = { encoding: 'utf-8' }, streamOptions?: stream.TransformOptions) {
         super(new stream.Transform({
-            ...options, ...{
+            ...streamOptions, ...{
                 writableObjectMode: false,
                 readableObjectMode: true,
                 transform: async (chunk: Buffer | string, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
@@ -38,8 +38,8 @@ export class BufferToString extends Node<Buffer, string> {
                             this.ingressQueue = this.ingressQueue.subarray(this.messageSize, this.ingressQueue.length);
                             const message = buf.toString(this.encoding);
 
-                            if (this[$stream] instanceof stream.Readable) {
-                                this[$stream].push(message);
+                            if (this._stream instanceof stream.Readable) {
+                                this._stream.push(message);
                             }
 
                             if (this.ingressQueue.length > 6) {
@@ -64,16 +64,5 @@ export class BufferToString extends Node<Buffer, string> {
         this.ingressQueue = Buffer.allocUnsafe(0);
         this.messageSize = null;
         this.encoding = encoding;
-    }
-
-    async write(data: Buffer): Promise<void> {
-        await super[$write](data);
-    }
-    get ins() {
-        return this[$ins];
-    }
-
-    get outs() {
-        return this[$outs];
     }
 }

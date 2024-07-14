@@ -1,5 +1,5 @@
 import * as stream from 'node:stream';
-import { Node, $write, $stream, $ins, $outs } from '../node.js';
+import { Node } from '../node.js';
 
 export interface BufferToObjectOptions {
     reviver?: (this: unknown, key: string, value: unknown) => unknown;
@@ -11,9 +11,9 @@ export class BufferToObject<OutT extends object> extends Node<Buffer, OutT> {
     public messageSize: number | null;
     public reviver?: (this: unknown, key: string, value: unknown) => unknown;
 
-    constructor({ reviver }: BufferToObjectOptions = {}, options?: stream.TransformOptions) {
+    constructor({ reviver }: BufferToObjectOptions = {}, streamOptions?: stream.TransformOptions) {
         super(new stream.Transform({
-            ...options, ...{
+            ...streamOptions, ...{
                 writableObjectMode: false,
                 readableObjectMode: true,
                 transform: async (chunk: Buffer | string, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
@@ -38,8 +38,8 @@ export class BufferToObject<OutT extends object> extends Node<Buffer, OutT> {
                             this.ingressQueue = this.ingressQueue.subarray(this.messageSize, this.ingressQueue.length);
                             const message = this.deserializeMessage(buf);
 
-                            if (this[$stream] instanceof stream.Readable) {
-                                this[$stream].push(message);
+                            if (this._stream instanceof stream.Readable) {
+                                this._stream.push(message);
                             }
 
                             if (this.ingressQueue.length > 6) {
@@ -66,18 +66,7 @@ export class BufferToObject<OutT extends object> extends Node<Buffer, OutT> {
         this.reviver = reviver;
     }
 
-    async write(data: Buffer): Promise<void> {
-        await super[$write](data);
-    }
-
     protected deserializeMessage(data: Buffer): OutT {
         return <OutT>JSON.parse(data.toString('utf-8'), this.reviver);
-    }
-    get ins() {
-        return this[$ins];
-    }
-
-    get outs() {
-        return this[$outs];
     }
 }

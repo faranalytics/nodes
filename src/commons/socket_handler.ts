@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as stream from 'node:stream';
 import * as net from 'node:net';
-import { Node, $write, $stream, $ins, $outs } from '../node.js';
+import { Node } from '../node.js';
 
 export interface SocketHandlerOptions {
     socket: net.Socket;
@@ -77,17 +77,13 @@ export class SocketHandler<InT, OutT> extends Node<InT, OutT> {
             const buf = this.ingressQueue.subarray(6, this.messageSize);
             this.ingressQueue = this.ingressQueue.subarray(this.messageSize, this.ingressQueue.length);
             const message = this.deserializeMessage(buf);
-            if (this[$stream] instanceof stream.Readable) {
-                this[$stream].push(message);
+            if (this._stream instanceof stream.Readable) {
+                this._stream.push(message);
             }
         }
         else {
             this.socket.once('data', this.push);
         }
-    }
-
-    async write(data: InT): Promise<void> {
-        await super[$write](data);
     }
 
     protected serializeMessage(message: InT): Buffer {
@@ -96,12 +92,5 @@ export class SocketHandler<InT, OutT> extends Node<InT, OutT> {
 
     protected deserializeMessage(data: Buffer): OutT {
         return <OutT>JSON.parse(data.toString('utf-8'), this.reviver);
-    }
-    get ins() {
-        return this[$ins];
-    }
-
-    get outs() {
-        return this[$outs];
     }
 }

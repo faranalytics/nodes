@@ -1,16 +1,7 @@
-import * as stream from 'node:stream';
+import { Readable, Writable, PassThrough } from 'node:stream';
 import { once } from 'node:events';
-import { config as Config } from './config.js';
+import Config from './config.js';
 import * as crypto from 'node:crypto';
-
-export const $stream = Symbol('stream');
-export const $queue = Symbol('queue');
-export const $ins = Symbol('ins');
-export const $outs = Symbol('outs');
-export const $write = Symbol('write');
-export const $size = Symbol('size');
-export const $errorHandler = Symbol('errorHandler');
-export const $id = Symbol('id');
 
 export interface NodeOptions {
     id: string;
@@ -18,30 +9,29 @@ export interface NodeOptions {
 
 export class Node<InT, OutT> {
 
-    protected [$stream]: stream.Writable | stream.Readable;
-    protected [$queue]: Array<InT>;
-    protected [$ins]: Array<Node<unknown, InT>>;
-    protected [$outs]: Array<Node<OutT, unknown>>;
-    protected [$size]: number;
-    protected [$id]: string;
+    protected _stream: Writable | Readable;
+    protected _queue: Array<InT>;
+    protected _size: number;
+    protected _id: string;
 
-    constructor(stream: stream.Writable | stream.Readable, options?: NodeOptions) {
-        this[$stream] = stream;
-        this[$queue] = [];
-        this[$ins] = [];
-        this[$outs] = [];
-        this[$size] = 0;
-        this[$id] = options?.id ?? crypto.randomUUID();
+    constructor(stream: Writable | Readable, options?: NodeOptions) {
+        this._stream = stream ?? new PassThrough();
+        this._queue = [];
+        this._size = 0;
+        this._id = options?.id ?? crypto.randomUUID();
 
-        this[$stream].once('error', (err: Error) => {
+        this._stream.on('unpipe', (readable: Readable) => {
+            readable.resume();
+        });
+
+        this._stream.once('error', (err: Error) => {
             try {
                 if (Config.debug) {
                     Config.errorHandler(err);
                 }
-                for (const _in of this[$ins]) {
-                    _in.disconnect(this);
+                if (this._stream instanceof Readable) {
+                    this._stream.unpipe();
                 }
-                this.disconnect(...this[$outs]);
             }
             catch (err) {
                 if (Config.errorHandler && err instanceof Error) {
@@ -53,13 +43,14 @@ export class Node<InT, OutT> {
 
     public connect(...nodes: Array<Node<OutT, unknown>>): typeof this {
         for (const node of nodes) {
-            if (this[$stream] instanceof stream.Readable && node[$stream] instanceof stream.Writable) {
-                this[$stream]?.pipe(node[$stream]);
-            }
-            node[$ins]?.push(this);
-            this[$outs]?.push(node);
-            if (Config.debug) {
-                console.log(`Connected ${this[$id]} to ${node[$id]}.`);
+            if (this._stream instanceof Readable && node._stream instanceof Writable) {
+                this._stream?.pipe(node._stream);
+                if (node._stream instanceof Readable) {
+                    node._stream.resume();
+                }
+                if (Config.debug) {
+                    console.log(`Connected ${this._id} to ${node._id}.`);
+                }
             }
         }
         return this;
@@ -67,53 +58,43 @@ export class Node<InT, OutT> {
 
     public disconnect(...nodes: Array<Node<OutT, unknown>>): typeof this {
         for (const node of nodes) {
-            if (this[$stream] instanceof stream.Readable && node[$stream] instanceof stream.Writable) {
-                this[$stream].unpipe(node[$stream]);
-                const nodeIndex = this[$outs].indexOf(node);
-                if (nodeIndex != -1) {
-                    this[$outs]?.splice(nodeIndex, 1)[0];
-                }
-                const thisIndex = node[$ins].indexOf(this);
-                if (thisIndex != -1) {
-                    node[$ins]?.splice(thisIndex, 1);
-                }
+            if (this._stream instanceof Readable && node._stream instanceof Writable) {
+                this._stream.unpipe(node._stream);
+                this._stream.resume();
                 if (Config.debug) {
-                    console.log(`Disconnected ${this[$id]} from ${node[$id]}.`);
-                }
-                if (this[$outs]?.length) {
-                    this[$stream].resume();
+                    console.log(`Disconnected ${this._id} from ${node._id}.`);
                 }
             }
         }
         return this;
     }
 
-    protected async [$write](data: InT, encoding?: BufferEncoding): Promise<void> {
-        if (!this[$stream].closed && this[$stream] instanceof stream.Writable) {
-            if (!this[$stream].writableNeedDrain) {
-                if (this[$queue].length === 0) {
-                    if (this[$stream].write(data, encoding ?? 'utf-8')) {
+    public async write(data: InT, encoding?: BufferEncoding): Promise<void> {
+        if (!this._stream.closed && this._stream instanceof Writable) {
+            if (!this._stream.writableNeedDrain) {
+                if (this._queue.length === 0) {
+                    if (this._stream.write(data, encoding ?? 'utf-8')) {
                         return;
                     }
                     else {
-                        await once(this[$stream], 'drain');
+                        await once(this._stream, 'drain');
                     }
                 }
                 else {
-                    this[$queue].push(data);
-                    this[$size] += !this[$stream].writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+                    this._queue.push(data);
+                    this._size += !this._stream.writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
                 }
-                while (this[$queue].length) {
-                    const data = this[$queue].shift();
-                    this[$size] -= !this[$stream].writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
-                    if (!this[$stream].write(data, encoding ?? 'utf-8')) {
-                        await once(this[$stream], 'drain');
+                while (this._queue.length) {
+                    const data = this._queue.shift();
+                    this._size -= !this._stream.writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+                    if (!this._stream.write(data, encoding ?? 'utf-8')) {
+                        await once(this._stream, 'drain');
                     }
                 }
             }
             else {
-                this[$queue].push(data);
-                this[$size] += !this[$stream].writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+                this._queue.push(data);
+                this._size += !this._stream.writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
             }
         }
     }

@@ -1,18 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from 'node:stream';
-import { $write, Node } from '../node.js';
+import { Node } from '../../node.js';
 
 export interface AnyTemporalToAnyOptions {
     time?: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class AnyTemporalToAny<InT = any, OutT = any> extends Node<InT, OutT> {
 
-    constructor({ time = 1e3 }: AnyTemporalToAnyOptions) {
+    public writableCount: number;
+
+    constructor({ time = 1e3 }: AnyTemporalToAnyOptions, streamOptions?: stream.TransformOptions) {
         super(new stream.Transform({
+            ...streamOptions,
             writableObjectMode: true,
             readableObjectMode: true,
-            transform: async (chunk: string, encoding: BufferEncoding, callback: stream.TransformCallback) => {
+            transform: async (chunk: InT, encoding: BufferEncoding, callback: stream.TransformCallback) => {
                 try {
                     await new Promise((r) => setTimeout(r, time));
                     callback(null, chunk);
@@ -25,9 +28,12 @@ export class AnyTemporalToAny<InT = any, OutT = any> extends Node<InT, OutT> {
             }
         })
         );
-    }
-
-    async write(data: InT): Promise<void> {
-        await super[$write](data);
+        this.writableCount = 0;
+        this._stream.on('pipe', () => {
+            this.writableCount = this.writableCount + 1;
+        });
+        this._stream.on('unpipe', () => {
+            this.writableCount = this.writableCount - 1;
+        });
     }
 }

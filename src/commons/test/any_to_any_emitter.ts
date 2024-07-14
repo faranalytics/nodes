@@ -1,17 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from 'node:stream';
 import * as events from 'node:events';
-import { $stream, $write, Node, $ins, $outs } from '../node.js';
+import { Node } from '../../node.js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class AnyToAnyEmitter<InT = any, OutT = any> extends Node<InT, OutT> {
 
     public emitter: events.EventEmitter;
-
-    constructor(options?: stream.TransformOptions) {
+    public writableCount: number;
+    
+    constructor(streamOptions?: stream.TransformOptions) {
         super(new stream.Transform({
-            ...options, ...{
+            ...streamOptions, ...{
                 objectMode: true,
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 transform: async (chunk: InT, encoding: BufferEncoding, callback: stream.TransformCallback) => {
                     try {
                         this.emitter.emit('data', chunk);
@@ -27,18 +27,13 @@ export class AnyToAnyEmitter<InT = any, OutT = any> extends Node<InT, OutT> {
         }));
 
         this.emitter = new events.EventEmitter();
-        this[$stream].once('error', this.emitter.emit);
-    }
-
-    async write(data: any): Promise<void> {
-        await super[$write](data);
-    }
-
-    get ins() {
-        return this[$ins];
-    }
-
-    get outs() {
-        return this[$outs];
+        this._stream.once('error', this.emitter.emit);
+        this.writableCount = 0;
+        this._stream.on('pipe', () => {
+            this.writableCount = this.writableCount + 1;
+        });
+        this._stream.on('unpipe', () => {
+            this.writableCount = this.writableCount - 1;
+        });
     }
 }
