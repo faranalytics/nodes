@@ -5,12 +5,21 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
     eslint.configs.recommended,
-    ...tseslint.configs.strict,
-    // ...tseslint.configs.stylistic,
+    ...tseslint.configs.recommended,
     {
+        files: ['**/*.ts'],
+        plugins: {
+            '@typescript-eslint': tseslint.plugin,
+        },
+        languageOptions: {
+            parser: tseslint.parser,
+            parserOptions: {
+                project: true,
+            },
+        },
         rules: {
-            semi: ['error', 'always'],
-            quotes: ['error', 'single']
-        }
-    }
-);
+            '@typescript-eslint/no-floating-promises': 'error',
+            'semi': 'error',
+            'quotes': ['error', 'single']
+        },
+    });

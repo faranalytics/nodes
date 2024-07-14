@@ -33,8 +33,11 @@ export class Node<InT, OutT> {
         this[$size] = 0;
         this[$id] = options?.id ?? crypto.randomUUID();
 
-        this[$stream].once('error', () => {
+        this[$stream].once('error', (err: Error) => {
             try {
+                if (err instanceof Error) {
+                    Config.errorHandler(err);
+                }
                 for (const _in of this[$ins]) {
                     _in.disconnect(this);
                 }

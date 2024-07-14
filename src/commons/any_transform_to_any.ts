@@ -17,13 +17,13 @@ export class AnyTransformToAny<InT = any> extends Node<InT, any> {
             transform: async (chunk: any, encoding: BufferEncoding, callback: stream.TransformCallback) => {
                 try {
                     chunk = await this.transform(chunk);
+                    callback(null, chunk);
                 }
                 catch (err) {
                     if (err instanceof Error) {
                         callback(err);
                     }
                 }
-                callback(null, chunk);
             }
         })
         );
