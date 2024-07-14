@@ -38,7 +38,7 @@ npm install @farar/nodes
 
 ### Node
 
-A `Node` is a component of a graph-like data transformation pipeline. Each `Node` is responsible for transforming its input into an output that can be consumed by its connected `Node` instances. By connecting `Nodes` into a network, sophisticated graph-like data transformation pipelines can be constructed.
+A `Node` is a component of a graph-like data transformation pipeline. Each `Node` is responsible for transforming its input into an output that can be consumed by its connected `Node` instances. By connecting `Node` instances into a network, sophisticated graph-like data transformation pipelines can be constructed.
 
 ## Examples
 
@@ -88,7 +88,7 @@ Returns: `<ConfigOptions>` An object that contains the current configuration set
 
 ### How to Implement a Data Transformation Node
 
-In order to implement a data transformation `Node`, extend the `Node` class and pass a Node.js `stream.Node` implementation to the super's constructor.
+In order to implement a data transformation `Node`, extend the `Node` class and pass a Node.js `stream.Writable` implementation to the super's constructor.
 
 For example, the following `StringToNumber` implementation will convert a numeric string to a number.
 
@@ -155,22 +155,17 @@ Reusing the same `Node` instance can result in unexpected phenomena. If the same
 
 ## Error Handling
 
-Nodes may be used in diverse contexts, each with unique requirements. Nodes _should_ never throw if the API is used in accordance with the documentation; however, _phenomena happens_.
+Nodes may be used in diverse contexts, each with unique requirements. Nodes _should_ never throw if the API is used in accordance with the documentation. However, "_phenomena happens_" sometimes, hence you may choose to handle errors accordingly.
 
-Nodes defaults to logging its errors to the console. If your application requires that errors throw, you have options:
+Nodes defaults to logging its errors to `process.stderr`. If your application requires that errors throw you may set an `errorHandler` on the `Config` object that does that.
 
-1. Assign an error handler to a `NodeOptions` object, which rethrows an `Error`, and pass it into the `Node` constructor.
-2. Set an `errorHandler` on the `Config` object.
-
-### Optionally configure all `Node` errors to be thrown.
-
-You can set a thrower globally by modifying the `Config` defaults.
+### Optionally configure all internal `Node` errors to be thrown.
 
 ```ts
 import { Config } from "@farar/nodes";
-Config.setErrorHandler((err: Error) => {
-  throw err;
-});
+Config.errorHandler = (err: Error) => {
+    throw err;
+};
 ```
 
 ## Test
