@@ -7,14 +7,14 @@ export interface NodeOptions {
     id: string;
 }
 
-export class Node<InT, OutT> {
+export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Readable> {
 
-    protected _stream: Writable | Readable;
+    protected _stream: StreamT;
     protected _queue: Array<InT>;
     protected _size: number;
     protected _id: string;
 
-    constructor(stream: Writable | Readable, options?: NodeOptions) {
+    constructor(stream:StreamT, options?: NodeOptions) {
         this._stream = stream ?? new PassThrough();
         this._queue = [];
         this._size = 0;
