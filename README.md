@@ -135,7 +135,7 @@ const socketHandler = new Node<Buffer, Buffer>(socket);
 
 ## Backpressure
 
-The `Node` class has a `$write` method that respects backpressue; when a stream is draining it will queue messages until a `drain` event is emitted by the Node's stream. Your application can optionally monitor the size of the queue and respond appropriately.
+The `Node` class has a `_write` method that respects backpressue; when a stream is draining it will queue messages until a `drain` event is emitted by the Node's stream. Your application can optionally monitor the size of the queue and respond appropriately.
 
 If you have a stream that is backpressuring, you can increase the high water mark on the stream in order to mitigate drain events.
 
