@@ -1,5 +1,6 @@
 import * as stream from 'node:stream';
 import * as events from 'node:events';
+import Config from '../../config.js';
 import { Node } from '../../node.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,5 +35,9 @@ export class AnyToEmitter<InT = any> extends Node<InT, never> {
         this._stream.on('unpipe', () => {
             this.writableCount = this.writableCount - 1;
         });
+    }
+    
+    public write(data: InT, encoding?: BufferEncoding): void {
+        super._write(data, encoding).catch((err: Error) => Config.errorHandler(err));
     }
 }

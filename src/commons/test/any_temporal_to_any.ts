@@ -1,5 +1,7 @@
 import * as stream from 'node:stream';
+import Config from '../../config.js';
 import { Node } from '../../node.js';
+
 
 export interface AnyTemporalToAnyOptions {
     time?: number;
@@ -35,5 +37,9 @@ export class AnyTemporalToAny<InT = any, OutT = any> extends Node<InT, OutT> {
         this._stream.on('unpipe', () => {
             this.writableCount = this.writableCount - 1;
         });
+    }
+
+    public write(data: InT, encoding?: BufferEncoding): void {
+        super._write(data, encoding).catch((err: Error) => Config.errorHandler(err));
     }
 }

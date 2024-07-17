@@ -68,10 +68,10 @@ _public_ **node.disconnect(...nodes)**
 
 Returns: `<Node<InT, OutT>>`
 
-_protected_ **node\[$write\](data)**
+_protected_ **node._write(data, encoding)**
 
 - data `<InT>` Data to write to the writable side of the stream.
-
+- encoding `<NodeJS.BufferEncoding>` An optional Node.js [encoding](https://nodejs.org/api/buffer.html#buffers-and-character-encodings) **Default: `utf-8`**.
 Returns: `<Promise<void>>`
 
 ### The Nodes Config Settings Object

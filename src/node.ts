@@ -14,7 +14,7 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
     protected _size: number;
     protected _id: string;
 
-    constructor(stream:StreamT, options?: NodeOptions) {
+    constructor(stream: StreamT, options?: NodeOptions) {
         this._stream = stream ?? new PassThrough();
         this._queue = [];
         this._size = 0;
@@ -69,7 +69,7 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
         return this;
     }
 
-    public async write(data: InT, encoding?: BufferEncoding): Promise<void> {
+    protected async _write(data: InT, encoding?: NodeJS.BufferEncoding): Promise<void> {
         if (!this._stream.closed && this._stream instanceof Writable) {
             if (!this._stream.writableNeedDrain) {
                 if (this._queue.length === 0) {
