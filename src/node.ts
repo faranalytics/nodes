@@ -1,10 +1,12 @@
 import { Readable, Writable, PassThrough } from 'node:stream';
 import { once } from 'node:events';
 import Config from './config.js';
+import { ErrorHandler } from './config.js';
 import * as crypto from 'node:crypto';
 
 export interface NodeOptions {
     id: string;
+    errorHandler: ErrorHandler;
 }
 
 export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Readable> {
@@ -13,12 +15,14 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
     protected _queue: Array<InT>;
     protected _size: number;
     protected _id: string;
+    protected _errorHandler: ErrorHandler;
 
     constructor(stream: StreamT, options?: NodeOptions) {
         this._stream = stream ?? new PassThrough();
         this._queue = [];
         this._size = 0;
         this._id = options?.id ?? crypto.randomUUID();
+        this._errorHandler = options?.errorHandler ?? Config.errorHandler;
 
         this._stream.on('unpipe', (readable: Readable) => {
             readable.resume();
@@ -27,15 +31,15 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
         this._stream.once('error', (err: Error) => {
             try {
                 if (Config.debug) {
-                    Config.errorHandler(err);
+                    this._errorHandler(err);
                 }
                 if (this._stream instanceof Readable) {
                     this._stream.unpipe();
                 }
             }
             catch (err) {
-                if (Config.errorHandler && err instanceof Error) {
-                    Config.errorHandler(err);
+                if (this._errorHandler && err instanceof Error) {
+                    this._errorHandler(err);
                 }
             }
         });

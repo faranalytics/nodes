@@ -36,4 +36,8 @@ export class AnyToVoid<InT = any> extends Node<InT, never> {
     public write(data: InT, encoding?: BufferEncoding): void {
         super._write(data, encoding).catch((err: Error) => Config.errorHandler(err));
     }
+
+    get stream(): stream.Readable | stream.Writable {
+        return this._stream;
+    }
 }

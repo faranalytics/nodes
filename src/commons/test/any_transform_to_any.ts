@@ -37,4 +37,8 @@ export class AnyTransformToAny<InT = any, OutT = any> extends Node<InT, OutT> {
             this.writableCount = this.writableCount - 1;
         });
     }
+
+    get stream(): stream.Readable | stream.Writable {
+        return this._stream;
+    }
 }

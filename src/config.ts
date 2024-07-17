@@ -1,5 +1,6 @@
 import EventEmitter from 'node:events';
-type ErrorHandler = (err: Error, ...params: Array<unknown>) => void;
+
+export type ErrorHandler = (err: Error, ...params: Array<unknown>) => void;
 
 class Config extends EventEmitter {
 

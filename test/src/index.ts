@@ -46,11 +46,11 @@ await describe('Test the integrity of data propagation and error handling.', asy
 
     void test('Write a `string` object and assert that it passed through the graph unscathed.', async () => {
         const result = once(anyToAnyEmitter.emitter, 'data');
-        await node.write(DATA);
+        node.write(DATA);
         assert.strictEqual((await result)[0], DATA);
     });
 
-    void test('Test selective detachment of inoperable graph components.', async () => {
+    void test('Throw an Error within a stream implementation and check for detachment from the graph.', async () => {
         const anyToThrow = new AnyTransformToAny<any, any>({ transform: () => { throw Error('AnyToThrow Error'); } });
         const anyToVoid = new AnyToVoid();
         anyToThrow.connect(anyToVoid);
@@ -59,14 +59,20 @@ await describe('Test the integrity of data propagation and error handling.', asy
         );
         assert.strictEqual(anyToThrow.writableCount, 1);
         assert.strictEqual(anyToVoid.writableCount, 1);
-        const result = once(anyToAnyEmitter.emitter, 'data');
-        await node.write(DATA);
+        const result = once(anyToThrow.stream, 'error');
+        node.write(DATA);
         await result;
         assert.strictEqual(anyToThrow.writableCount, 0);
         assert.strictEqual(anyToVoid.writableCount, 0);
     });
 
-    void test('Test that a newly added Node continues to flow after reaching its `highWaterMark`.', async () => {
+    void test('A Node has thrown an Error; check that the graph is still in flowing mode.', async () => {
+        const result = once(anyToAnyEmitter.emitter, 'data');
+        node.write(DATA);
+        assert.strictEqual((await result)[0], DATA);
+    });
+
+    void test('Attach a Node to the graph, exceed its `highWaterMark`, and check that it remains in flowing mode.', async () => {
         let i; const ITERATIONS = 1e3;
         const passThrough = new PassThrough({ readableObjectMode: true, writableObjectMode: true, readableHighWaterMark: 1, writableHighWaterMark: 1 });
         socketHandler.connect(new Node<string, string>(passThrough));
@@ -81,7 +87,7 @@ await describe('Test the integrity of data propagation and error handling.', asy
             });
         });
         for (i = 0; i < ITERATIONS; i++) {
-            await node.write(DATA);
+            node.write(DATA);
         }
         const data = (await result).reduce((prev, curr) => prev + curr, '');
         assert.strictEqual(data.length, ITERATIONS * 10);

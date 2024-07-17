@@ -41,4 +41,8 @@ export class AnyToAnyEmitter<InT = any, OutT = any> extends Node<InT, OutT> {
     public write(data: InT, encoding?: BufferEncoding): void {
         super._write(data, encoding).catch((err: Error) => Config.errorHandler(err));
     }
+
+    get stream(): stream.Readable | stream.Writable {
+        return this._stream;
+    }
 }
