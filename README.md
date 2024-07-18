@@ -54,7 +54,7 @@ Please see the [Streams Logger](https://github.com/faranalytics/streams-logger) 
 
 - `stream` `<stream.Writable | stream.Readable>` An instance of a `Writable`, `Readable`, `Duplex`, or `Transform` Node.js stream.
 - `options` `<NodeOptions>`
-  - `errorHandler` `<(err: Error, ...params: Array<unknown>) => void>` An optional error handler that will be used in the event of an internal Error.
+  - `errorHandler` `<(err: Error, ...params: Array<unknown>) => void>` An optional error handler that will be used in the event of an internal Error. **Default: `console.error`**
 
 _public_ **node.connect(...nodes)**
 

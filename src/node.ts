@@ -29,18 +29,11 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
         });
 
         this._stream.once('error', (err: Error) => {
-            try {
-                if (Config.debug) {
-                    this._errorHandler(err);
-                }
-                if (this._stream instanceof Readable) {
-                    this._stream.unpipe();
-                }
+            if (Config.debug && this._errorHandler) {
+                this._errorHandler(err);
             }
-            catch (err) {
-                if (this._errorHandler && err instanceof Error) {
-                    this._errorHandler(err);
-                }
+            if (this._stream instanceof Readable) {
+                this._stream.unpipe();
             }
         });
     }
@@ -74,31 +67,25 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
     }
 
     protected async _write(data: InT, encoding?: NodeJS.BufferEncoding): Promise<void> {
-        if (!this._stream.closed && this._stream instanceof Writable) {
-            if (!this._stream.writableNeedDrain) {
-                if (this._queue.length === 0) {
-                    if (this._stream.write(data, encoding ?? 'utf-8')) {
-                        return;
-                    }
-                    else {
-                        await once(this._stream, 'drain');
-                    }
-                }
-                else {
-                    this._queue.push(data);
-                    this._size += !this._stream.writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
-                }
-                while (this._queue.length) {
-                    const data = this._queue.shift();
-                    this._size -= !this._stream.writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
-                    if (!this._stream.write(data, encoding ?? 'utf-8')) {
-                        await once(this._stream, 'drain');
-                    }
-                }
-            }
-            else {
-                this._queue.push(data);
-                this._size += !this._stream.writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+        if (this._stream.closed || !(this._stream instanceof Writable))
+            return;
+
+        if (this._stream.writableNeedDrain) {
+            this._queue.push(data);
+            this._size += !this._stream.writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+            return;
+        }
+
+        if (this._stream.write(data, encoding ?? 'utf-8'))
+            return;
+        
+        await once(this._stream, 'drain');
+
+        while (this._queue.length) {
+            const data = this._queue.shift();
+            this._size -= !this._stream.writableObjectMode && (data instanceof Buffer || typeof data == 'string') ? data.length : 1;
+            if (!this._stream.write(data, encoding ?? 'utf-8')) {
+                await once(this._stream, 'drain');
             }
         }
     }
