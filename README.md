@@ -21,7 +21,7 @@ Nodes provides an intuitive framework for constructing data transformation graph
   - [_A Graph-API-Pattern Logger Implementation_](#a-graph-api-pattern-logger-implementation-example)
 - [API](#api)
 - [How-Tos](#how-tos)
-  - [How to Implement a Data Transformation Node](#how-to-implement-a-node)
+  - [How to Implement a Data Transformation Node](#how-to-implement-a-data-transformation-node)
   - [How to Consume a Readable, Writable, Duplex, or Transform Node.js Stream](#how-to-consume-a-readable-writable-duplex-or-transform-nodejs-stream)
 - [Backpressure](#backpressure)
 - [Best Practices](#best-practices)
@@ -51,7 +51,8 @@ Please see the [Streams Logger](https://github.com/faranalytics/streams-logger) 
 ### The Node class.
 
 **new Nodes.Node\<InT, OutT\>(stream, options)**
-
+- `<IntT>` The input into the stream.
+- `<OutT>` The output from the stream.
 - `stream` `<stream.Writable | stream.Readable>` An instance of a `Writable`, `Readable`, `Duplex`, or `Transform` Node.js stream.
 - `options` `<NodeOptions>`
   - `errorHandler` `<(err: Error, ...params: Array<unknown>) => void>` An optional error handler that will be used in the event of an internal Error. **Default: `console.error`**
@@ -88,7 +89,7 @@ In order to implement a data transformation `Node`, extend the `Node` class and 
 
 For example, the following `StringToNumber` implementation will convert a numeric string to a number.
 
-> NB: `writableObjectMode` and `readableObjectMode` are both set to true in this example; hence, the Node.js stream implementation will handle the input and output as objects. It's important that `writableObjectMode` and `readableObjectMode` accurately reflect the input and output types of your `Node`.
+> **NB** In this example, `writableObjectMode` and `readableObjectMode` are both set to `true`; hence, the Node.js stream implementation will handle the input and output as objects. It's important that `writableObjectMode` and `readableObjectMode` accurately reflect the input and output types of your `Node`.
 
 ```ts
 import * as stream from 'node:stream';
