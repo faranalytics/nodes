@@ -1,4 +1,4 @@
-import { Readable, Writable, PassThrough } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 import { once } from 'node:events';
 import Config from './config.js';
 import { ErrorHandler } from './config.js';
@@ -18,7 +18,7 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
     protected _errorHandler: ErrorHandler;
 
     constructor(stream: StreamT, options?: NodeOptions) {
-        this._stream = stream ?? new PassThrough();
+        this._stream = stream;
         this._queue = [];
         this._size = 0;
         this._id = options?.id ?? crypto.randomUUID();
