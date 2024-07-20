@@ -72,7 +72,7 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
 
         if (this._stream.writableNeedDrain) {
             this._queue.push(data);
-            this._size += this._stream.writableObjectMode ? 1 : (<{length:number}>data).length;
+            this._size += this._stream.writableObjectMode ? 1 : (<string|Buffer>data).length ?? (<DataView>data).byteLength ?? 0; 
             return;
         }
 
@@ -83,7 +83,7 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
 
         while (this._queue.length) {
             const data = this._queue.shift();
-            this._size -= this._stream.writableObjectMode ? 1 : (<{length:number}>data).length;
+            this._size -= this._stream.writableObjectMode ? 1 : (<string|Buffer>data).length ?? (<DataView>data).byteLength ?? 0;
             if (!this._stream.write(data, encoding ?? 'utf-8')) {
                 await once(this._stream, 'drain');
             }
