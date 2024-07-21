@@ -163,22 +163,9 @@ Config.errorHandler = (err: Error) => {
 
 ## Test
 
-### Clone the repository.
 ```bash
 git clone https://github.com/faranalytics/nodes.git
-```
-### Change directory into the repository.
-```bash
 cd nodes
-```
-### Install dependencies.
-
-```bash
 npm install && npm update
-```
-
-### Run tests.
-
-```bash
 npm test
 ```
