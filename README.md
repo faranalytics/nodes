@@ -50,7 +50,7 @@ Please see the [Streams Logger](https://github.com/faranalytics/streams-logger) 
 
 ### The Node class.
 
-**new Nodes.Node\<InT, OutT\>(stream, options)**
+**new nodes.Node\<InT, OutT\>(stream, options)**
 - `<IntT>` The input into the stream.
 - `<OutT>` The output from the stream.
 - `stream` `<stream.Writable | stream.Readable>` An instance of a `Writable`, `Readable`, `Duplex`, or `Transform` Node.js stream.
