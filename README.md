@@ -167,7 +167,6 @@ Config.errorHandler = (err: Error) => {
 ```bash
 git clone https://github.com/faranalytics/nodes.git
 ```
-
 ### Change directory into the repository.
 ```bash
 cd nodes
