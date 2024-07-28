@@ -4,8 +4,8 @@ export type ErrorHandler = (err: Error, ...params: Array<unknown>) => void;
 
 class Config extends EventEmitter {
 
-    public _errorHandler: ErrorHandler;
-    public _debug: boolean;
+    protected _errorHandler: ErrorHandler;
+    protected _debug: boolean;
 
     constructor() {
         super();
