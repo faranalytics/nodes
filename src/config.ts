@@ -13,9 +13,17 @@ class Config extends EventEmitter {
         this._debug = false;
     }
 
+    get errorHandler() {
+        return this._errorHandler;
+    }
+
     set errorHandler(errorHandler: ErrorHandler) {
         this._errorHandler = errorHandler;
         this.emit('errorHandler', this._errorHandler);
+    }
+
+    get debug() {
+        return this._debug;
     }
 
     set debug(debug: boolean) {
