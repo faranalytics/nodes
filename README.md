@@ -25,6 +25,7 @@ Nodes provides an intuitive framework for constructing data transformation graph
 - [Error Handling](#error-handling)
 - [Versioning](#versioning)
 - [Test](#test)
+- [Support](#support)
 
 ## Installation
 
@@ -207,3 +208,9 @@ Run the tests.
 ```bash
 npm test
 ```
+
+## Support
+
+If you have a feature request or run into any issues, feel free to submit an [issue](https://github.com/faranalytics/nodes/issues) or start a [discussion](https://github.com/faranalytics/nodes/discussions). You’re also welcome to reach out directly to one of the authors at any time.
+
+- [Adam Patterson](https://github.com/adamjpatterson)
