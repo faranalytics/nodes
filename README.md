@@ -18,14 +18,12 @@ Nodes provides an intuitive framework for constructing data transformation graph
 - [Installation](#installation)
 - [Concepts](#concepts)
 - [Examples](#examples)
-  - [_A Graph-API-Pattern Logger Implementation_](#a-graph-api-pattern-logger-implementation-example)
 - [API](#api)
 - [How-Tos](#how-tos)
-  - [How to Implement a Data Transformation Node](#how-to-implement-a-data-transformation-node)
-  - [How to Consume a Readable, Writable, Duplex, or Transform Node.js Stream](#how-to-consume-a-readable-writable-duplex-or-transform-nodejs-stream)
 - [Backpressure](#backpressure)
 - [Best Practices](#best-practices)
 - [Error Handling](#error-handling)
+- [Versioning](#versioning)
 - [Test](#test)
 
 ## Installation
@@ -48,9 +46,10 @@ Please see the [_Streams_ Logger](https://github.com/faranalytics/streams-logger
 
 ## API
 
-### The Node class.
+### The Node Class
 
-**new nodes.Node\<InT, OutT\>(stream, options)**
+#### new nodes.Node\<InT, OutT\>(stream, options)
+
 - `<IntT>` The input into the stream.
 - `<OutT>` The output from the stream.
 - `stream` `<stream.Writable | stream.Readable>` An instance of a `Writable`, `Readable`, `Duplex`, or `Transform` Node.js stream.
@@ -69,15 +68,16 @@ _public_ **node.disconnect(...nodes)**
 
 Returns: `<Node<InT, OutT>>`
 
-_protected_ **node._write(data, encoding)**
+_protected_ **node.\_write(data, encoding)**
 
 - data `<InT>` Data to write to the writable side of the stream.
 - encoding `<NodeJS.BufferEncoding>` An optional Node.js [encoding](https://nodejs.org/api/buffer.html#buffers-and-character-encodings) **Default: `utf-8`**.
+
 Returns: `<Promise<void>>`
 
 ### The Nodes Config Settings Object
 
-**Config.errorHandler** `<ErrorHandler>` An optional error handler.  **Default: `console.error`**
+**Config.errorHandler** `<ErrorHandler>` An optional error handler. **Default: `console.error`**
 
 **Config.debug** `<boolean>` Announce internal activities e.g., connectiing and disconnecting from `Node` instances. **Default: `false`**
 
@@ -92,31 +92,36 @@ For example, the following `StringToNumber` implementation will convert a numeri
 > **NB** In this example, `writableObjectMode` and `readableObjectMode` are both set to `true`; hence, the Node.js stream implementation will handle the input and output as objects. It's important that `writableObjectMode` and `readableObjectMode` accurately reflect the input and output types of your `Node`.
 
 ```ts
-import * as stream from 'node:stream';
-import { Config, Node } from '@farar/nodes';
+import * as stream from "node:stream";
+import { Config, Node } from "@farar/nodes";
 
 export class StringToNumber extends Node<string, number> {
-
-    constructor(options: stream.TransformOptions) {
-        super(new stream.Transform({
-            ...options, ...{
-                writableObjectMode: true,
-                readableObjectMode: true,
-                transform: (chunk: string, encoding: BufferEncoding, callback: stream.TransformCallback) => {
-                    try {
-                        const result = parseFloat(chunk.toString());
-                        callback(null, result);
-                    }
-                    catch (err) {
-                        if (err instanceof Error) {
-                            callback(err);
-                            Config.errorHandler(err);
-                        }
-                    }
-                }
+  constructor(options: stream.TransformOptions) {
+    super(
+      new stream.Transform({
+        ...options,
+        ...{
+          writableObjectMode: true,
+          readableObjectMode: true,
+          transform: (
+            chunk: string,
+            encoding: BufferEncoding,
+            callback: stream.TransformCallback
+          ) => {
+            try {
+              const result = parseFloat(chunk.toString());
+              callback(null, result);
+            } catch (err) {
+              if (err instanceof Error) {
+                callback(err);
+                Config.errorHandler(err);
+              }
             }
-        }));
-    }
+          },
+        },
+      })
+    );
+  }
 }
 ```
 
@@ -150,22 +155,55 @@ Reusing the same `Node` instance can result in unexpected phenomena. If the same
 
 Nodes may be used in diverse contexts, each with unique requirements. Nodes _should_ never throw if the API is used in accordance with the documentation. However, "_phenomena happens_"; hence, you may choose to handle errors accordingly!
 
-Nodes defaults to logging its errors to `process.stderr`. If your application requires that errors throw, you may set an `errorHandler` on the `Config` object that does that.  Alternatively, your handler may consume the `Error` and handle it otherwise.
+Nodes defaults to logging its errors to `process.stderr`. If your application requires that errors throw, you may set an `errorHandler` on the `Config` object that does that. Alternatively, your handler may consume the `Error` and handle it otherwise.
 
 ### Optionally configure all internal `Node` errors to be thrown.
 
 ```ts
 import { Config } from "@farar/nodes";
 Config.errorHandler = (err: Error) => {
-    throw err;
+  throw err;
 };
 ```
 
+## Versioning
+
+The Nodes package adheres to semantic versioning. Breaking changes to the public API will result in a turn of the major. Minor and patch changes will always be backward compatible.
+
+Excerpted from [Semantic Versioning 2.0.0](https://semver.org/):
+
+> Given a version number MAJOR.MINOR.PATCH, increment the:
+>
+> 1. MAJOR version when you make incompatible API changes
+> 2. MINOR version when you add functionality in a backward compatible manner
+> 3. PATCH version when you make backward compatible bug fixes
+>
+> Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+
 ## Test
+
+### Instructions
+
+Clone the repository.
 
 ```bash
 git clone https://github.com/faranalytics/nodes.git
+```
+
+Change directory into the root of the repository.
+
+```bash
 cd nodes
+```
+
+Install dependencies.
+
+```bash
 npm install && npm update
+```
+
+Run the tests.
+
+```bash
 npm test
 ```
