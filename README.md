@@ -13,7 +13,7 @@ Nodes provides an intuitive framework for constructing data transformation graph
 - Error handling and selective termination of inoperable graph components.
 - Automatic message queueing in order to assist with handling of backpressure.
 
-## Table of Contents
+## Table of contents
 
 - [Installation](#installation)
 - [Concepts](#concepts)
@@ -21,8 +21,8 @@ Nodes provides an intuitive framework for constructing data transformation graph
 - [API](#api)
 - [How-Tos](#how-tos)
 - [Backpressure](#backpressure)
-- [Best Practices](#best-practices)
-- [Error Handling](#error-handling)
+- [Best practices](#best-practices)
+- [Error handling](#error-handling)
 - [Versioning](#versioning)
 - [Test](#test)
 - [Support](#support)
@@ -41,13 +41,13 @@ A `Node` is a component of a graph-like data transformation pipeline. Each `Node
 
 ## Examples
 
-### _A Graph API Pattern Logger Implementation_ <sup><sup>\</example\></sup></sup>
+### _A graph API pattern logger implementation_ <sup><sup>\</example\></sup></sup>
 
 Please see the [_Streams_ Logger](https://github.com/faranalytics/streams-logger) implementation.
 
 ## API
 
-### The Node Class
+### The Node class
 
 #### new nodes.Node\<InT, OutT\>(stream, options)
 
@@ -76,7 +76,7 @@ _protected_ **node.\_write(data, encoding)**
 
 Returns: `<Promise<void>>`
 
-### The Nodes Config Settings Object
+### The Nodes Config settings object
 
 **Config.errorHandler** `<ErrorHandler>` An optional error handler. **Default: `console.error`**
 
@@ -84,7 +84,7 @@ Returns: `<Promise<void>>`
 
 ## How-Tos
 
-### How to Implement a Data Transformation Node
+### How to implement a data transformation node
 
 In order to implement a data transformation `Node`, extend the `Node` class and pass a Node.js `stream.Writable` implementation to the super's constructor.
 
@@ -126,7 +126,7 @@ export class StringToNumber extends Node<string, number> {
 }
 ```
 
-### How to Consume a Readable, Writable, Duplex, or Transform Node.js Stream
+### How to consume a Readable, Writable, Duplex, or Transform Node.js stream
 
 In this hypothetical example a type-safe `Node` is constructed from a `net.Socket`. The resulting `Node` instance can be used in a data transformation graph.
 
@@ -146,19 +146,19 @@ The `Node` class has a `_write` method that respects backpressue; when a stream 
 
 If you have a stream that is backpressuring, you can increase the high water mark on the stream in order to mitigate drain events.
 
-## Best Practices
+## Best practices
 
 ### Avoid reuse of `Node` instances (_unless you know what you are doing!_).
 
 Reusing the same `Node` instance can result in unexpected phenomena. If the same `Node` instance is used in different locations in your graph, you need to think carefully about the resulting edges that are connected to both the input and the output of the `Node` instance. Most of the time if you need to use the same class of `Node` more than once, it's advisable to create a new instance for each use.
 
-## Error Handling
+## Error handling
 
 Nodes may be used in diverse contexts, each with unique requirements. Nodes _should_ never throw if the API is used in accordance with the documentation. However, "_phenomena happens_"; hence, you may choose to handle errors accordingly!
 
 Nodes defaults to logging its errors to `process.stderr`. If your application requires that errors throw, you may set an `errorHandler` on the `Config` object that does that. Alternatively, your handler may consume the `Error` and handle it otherwise.
 
-### Optionally configure all internal `Node` errors to be thrown.
+### Optionally configure all internal errors to be thrown
 
 ```ts
 import { Config } from "@farar/nodes";
@@ -183,27 +183,27 @@ Excerpted from [Semantic Versioning 2.0.0](https://semver.org/):
 
 ## Test
 
-### Instructions
+### How to run the test
 
-Clone the repository.
+#### Clone the repository.
 
 ```bash
 git clone https://github.com/faranalytics/nodes.git
 ```
 
-Change directory into the root of the repository.
+#### Change directory into the root of the repository.
 
 ```bash
 cd nodes
 ```
 
-Install dependencies.
+#### Install dependencies.
 
 ```bash
 npm install && npm update
 ```
 
-Run the tests.
+#### Run the tests.
 
 ```bash
 npm test
@@ -211,6 +211,6 @@ npm test
 
 ## Support
 
-If you have a feature request or run into any issues, feel free to submit an [issue](https://github.com/faranalytics/nodes/issues) or start a [discussion](https://github.com/faranalytics/nodes/discussions). You’re also welcome to reach out directly to one of the authors at any time.
+If you have a feature request or run into any issues, feel free to submit an [issue](https://github.com/faranalytics/nodes/issues) or start a [discussion](https://github.com/faranalytics/nodes/discussions). You’re also welcome to reach out directly to one of the authors.
 
 - [Adam Patterson](https://github.com/adamjpatterson)
