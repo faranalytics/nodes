@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import * as stream from 'node:stream';
-import * as net from 'node:net';
-import { Node } from '../node.js';
+import * as stream from "node:stream";
+import * as net from "node:net";
+import { Node } from "../node.js";
 
 export interface SocketHandlerOptions {
   socket: net.Socket;
@@ -35,7 +35,7 @@ export class SocketHandler<InT, OutT> extends Node<InT, OutT> {
             size.writeUIntBE(data.length + 6, 0, 6);
             const buf = Buffer.concat([size, data]);
             if (!this.socket.write(buf)) {
-              this.socket.once('drain', callback);
+              this.socket.once("drain", callback);
             }
             else {
               callback();
@@ -59,17 +59,17 @@ export class SocketHandler<InT, OutT> extends Node<InT, OutT> {
     this.space = space;
     this.socket = socket;
 
-    this.socket.on('data', (data: Buffer) => {
+    this.socket.on("data", (data: Buffer) => {
       this.ingressQueue = Buffer.concat([this.ingressQueue, data]);
     });
   }
 
-  push() {
+  public push = ()=> {
     if (this.ingressQueue.length > 6) {
       this.messageSize = this.ingressQueue.readUintBE(0, 6);
     }
     else {
-      this.socket.once('data', this.push);
+      this.socket.once("data", this.push);
       return;
     }
 
@@ -82,15 +82,15 @@ export class SocketHandler<InT, OutT> extends Node<InT, OutT> {
       }
     }
     else {
-      this.socket.once('data', this.push);
+      this.socket.once("data", this.push);
     }
-  }
+  };
 
   protected serializeMessage(message: InT): Buffer {
-    return Buffer.from(JSON.stringify(message, this.replacer, this.space), 'utf-8');
+    return Buffer.from(JSON.stringify(message, this.replacer, this.space), "utf-8");
   }
 
   protected deserializeMessage(data: Buffer): OutT {
-    return <OutT>JSON.parse(data.toString('utf-8'), this.reviver);
+    return JSON.parse(data.toString("utf-8"), this.reviver) as OutT;
   }
 }

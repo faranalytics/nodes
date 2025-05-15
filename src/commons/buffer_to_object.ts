@@ -1,5 +1,5 @@
-import * as stream from 'node:stream';
-import { Node } from '../node.js';
+import * as stream from "node:stream";
+import { Node } from "../node.js";
 
 export interface BufferToObjectOptions {
   reviver?: (this: unknown, key: string, value: unknown) => unknown;
@@ -16,17 +16,15 @@ export class BufferToObject<OutT extends object> extends Node<Buffer, OutT> {
       ...streamOptions, ...{
         writableObjectMode: false,
         readableObjectMode: true,
-        transform: async (chunk: Buffer | string, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
+        transform: (chunk: Buffer | string, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
           try {
             if (!Buffer.isBuffer(chunk)) {
-              chunk = Buffer.from(chunk, 'utf-8');
+              chunk = Buffer.from(chunk, "utf-8");
             }
 
             this.ingressQueue = Buffer.concat([this.ingressQueue, chunk]);
 
-            if (this.messageSize === null) {
-              this.messageSize = this.ingressQueue.readUintBE(0, 6);
-            }
+            this.messageSize ??= this.ingressQueue.readUintBE(0, 6);
 
             if (this.ingressQueue.length < this.messageSize) {
               callback();
@@ -67,6 +65,6 @@ export class BufferToObject<OutT extends object> extends Node<Buffer, OutT> {
   }
 
   protected deserializeMessage(data: Buffer): OutT {
-    return <OutT>JSON.parse(data.toString('utf-8'), this.reviver);
+    return JSON.parse(data.toString("utf-8"), this.reviver) as OutT;
   }
 }

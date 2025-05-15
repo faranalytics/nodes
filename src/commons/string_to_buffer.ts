@@ -1,5 +1,5 @@
-import * as stream from 'node:stream';
-import { Node } from '../node.js';
+import * as stream from "node:stream";
+import { Node } from "../node.js";
 
 export interface StringToBufferOptions {
   encoding?: NodeJS.BufferEncoding;
@@ -14,7 +14,7 @@ export class StringToBuffer<InT extends string = string> extends Node<InT, Buffe
       ...streamOptions, ...{
         writableObjectMode: false,
         readableObjectMode: false,
-        transform: async (chunk: InT, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
+        transform: (chunk: InT, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
           try {
             const data = Buffer.from(chunk, this.encoding);
             const size = Buffer.alloc(6, 0);
@@ -30,6 +30,6 @@ export class StringToBuffer<InT extends string = string> extends Node<InT, Buffe
         }
       }
     }));
-    this.encoding = options?.encoding ?? 'utf-8';
+    this.encoding = options?.encoding ?? "utf-8";
   }
 }

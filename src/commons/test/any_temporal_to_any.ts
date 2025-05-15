@@ -1,6 +1,6 @@
-import * as stream from 'node:stream';
-import Config from '../../config.js';
-import { Node } from '../../node.js';
+import * as stream from "node:stream";
+import Config from "../../config.js";
+import { Node } from "../../node.js";
 
 
 export interface AnyTemporalToAnyOptions {
@@ -17,30 +17,32 @@ export class AnyTemporalToAny<InT = any, OutT = any> extends Node<InT, OutT> {
       ...streamOptions,
       writableObjectMode: true,
       readableObjectMode: true,
-      transform: async (chunk: InT, encoding: BufferEncoding, callback: stream.TransformCallback) => {
-        try {
-          await new Promise((r) => setTimeout(r, time));
-          callback(null, chunk);
-        }
-        catch (err) {
-          if (err instanceof Error) {
-            callback(err);
+      transform: (chunk: InT, encoding: BufferEncoding, callback: stream.TransformCallback) => {
+        void (async () => {
+          try {
+            await new Promise((r) => setTimeout(r, time));
+            callback(null, chunk);
           }
-        }
+          catch (err) {
+            if (err instanceof Error) {
+              callback(err);
+            }
+          }
+        })();
       }
     })
     );
     this.writableCount = 0;
-    this._stream.on('pipe', () => {
+    this._stream.on("pipe", () => {
       this.writableCount = this.writableCount + 1;
     });
-    this._stream.on('unpipe', () => {
+    this._stream.on("unpipe", () => {
       this.writableCount = this.writableCount - 1;
     });
   }
 
   public write(data: InT, encoding?: BufferEncoding): void {
-    super._write(data, encoding).catch((err: Error) => Config.errorHandler(err));
+    super._write(data, encoding).catch((err: unknown) => { Config.errorHandler(err instanceof Error ? err : new Error()); });
   }
 
   get stream(): stream.Readable | stream.Writable {

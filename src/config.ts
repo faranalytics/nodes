@@ -1,6 +1,6 @@
-import EventEmitter from 'node:events';
+import EventEmitter from "node:events";
 
-export type ErrorHandler = (err: Error, ...params: Array<unknown>) => void;
+export type ErrorHandler = (err: Error, ...params: unknown[]) => void;
 
 interface ConfigEvents {
   errorHandler: [ErrorHandler];
@@ -25,7 +25,7 @@ class Config extends EventEmitter<ConfigEvents> {
 
   set errorHandler(errorHandler: ErrorHandler) {
     this._errorHandler = errorHandler;
-    this.emit('errorHandler', this._errorHandler);
+    this.emit("errorHandler", this._errorHandler);
   }
 
   get debug() {
@@ -34,7 +34,7 @@ class Config extends EventEmitter<ConfigEvents> {
 
   set debug(debug: boolean) {
     this._debug = debug;
-    this.emit('debug', this._debug);
+    this.emit("debug", this._debug);
   }
 }
 

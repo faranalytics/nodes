@@ -1,5 +1,5 @@
-import * as stream from 'node:stream';
-import { Node } from '../node.js';
+import * as stream from "node:stream";
+import { Node } from "../node.js";
 
 export interface ObjectToBufferOptions {
   replacer?: (this: unknown, key: string, value: unknown) => unknown;
@@ -17,7 +17,7 @@ export class ObjectToBuffer<InT extends object> extends Node<InT, Buffer> {
       ...streamOptions, ...{
         writableObjectMode: true,
         readableObjectMode: false,
-        transform: async (chunk: InT, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
+        transform: (chunk: InT, _encoding: BufferEncoding, callback: stream.TransformCallback) => {
           try {
             const data = this.serializeMessage(chunk);
             const size = Buffer.alloc(6, 0);
@@ -40,6 +40,6 @@ export class ObjectToBuffer<InT extends object> extends Node<InT, Buffer> {
   }
 
   protected serializeMessage(message: InT): Buffer {
-    return Buffer.from(JSON.stringify(message, this.replacer, this.space), 'utf-8');
+    return Buffer.from(JSON.stringify(message, this.replacer, this.space), "utf-8");
   }
 }

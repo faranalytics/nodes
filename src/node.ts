@@ -1,10 +1,10 @@
-import { Readable, Writable } from 'node:stream';
-import { once } from 'node:events';
-import Config from './config.js';
-import { ErrorHandler } from './config.js';
-import * as crypto from 'node:crypto';
+import { Readable, Writable } from "node:stream";
+import { once } from "node:events";
+import Config from "./config.js";
+import { ErrorHandler } from "./config.js";
+import * as crypto from "node:crypto";
 
-const $streams = Symbol('nodes');
+const $streams = Symbol("nodes");
 
 export interface NodeOptions {
   id: string;
@@ -16,10 +16,10 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
   static [$streams] = new WeakSet<Writable | Readable>;
 
   protected _stream: StreamT;
-  protected _queue: Array<InT>;
+  protected _queue: InT[];
   protected _size: number;
   protected _id: string;
-  protected _errorHandler: ErrorHandler;
+  protected _errorHandler?: ErrorHandler;
 
   constructor(stream: StreamT, options?: NodeOptions) {
     this._stream = stream;
@@ -31,15 +31,15 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
     Node[$streams].add(stream);
 
     if (this._stream instanceof Writable) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      this._stream.on('pipe', (readable: Readable) => {
+       
+      this._stream.on("pipe", (readable: Readable) => {
         this._stream.setMaxListeners(this._stream.getMaxListeners() + 1);
         if (Node[$streams].has(readable)) {
           readable.setMaxListeners(readable.getMaxListeners() + 1);
         }
       });
 
-      this._stream.on('unpipe', (readable: Readable) => {
+      this._stream.on("unpipe", (readable: Readable) => {
         readable.resume();
         this._stream.setMaxListeners(this._stream.getMaxListeners() - 1);
         if (Node[$streams].has(readable)) {
@@ -48,7 +48,7 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
       });
     }
 
-    this._stream.once('error', (err: Error) => {
+    this._stream.once("error", (err: Error) => {
       if (Config.debug && this._errorHandler) {
         this._errorHandler(err);
       }
@@ -58,10 +58,10 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
     });
   }
 
-  public connect(...nodes: Array<Node<OutT, unknown>>): typeof this {
+  public connect(...nodes: Node<OutT, unknown>[]): typeof this {
     for (const node of nodes) {
       if (this._stream instanceof Readable && node._stream instanceof Writable) {
-        this._stream?.pipe(node._stream);
+        this._stream.pipe(node._stream);
         if (node._stream instanceof Readable) {
           node._stream.resume();
         }
@@ -73,7 +73,7 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
     return this;
   }
 
-  public disconnect(...nodes: Array<Node<OutT, unknown>>): typeof this {
+  public disconnect(...nodes: Node<OutT, unknown>[]): typeof this {
     for (const node of nodes) {
       if (this._stream instanceof Readable && node._stream instanceof Writable) {
         this._stream.unpipe(node._stream);
@@ -92,20 +92,22 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
 
     if (this._stream.writableNeedDrain) {
       this._queue.push(data);
-      this._size += this._stream.writableObjectMode ? 1 : (<string | Buffer>data).length ?? (<DataView>data).byteLength ?? 0;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      this._size += this._stream.writableObjectMode ? 1 : (data as string | Buffer).length ?? (data as DataView).byteLength ?? 0;
       return;
     }
 
-    if (this._stream.write(data, encoding ?? 'utf-8'))
+    if (this._stream.write(data, encoding ?? "utf-8"))
       return;
 
-    await once(this._stream, 'drain');
+    await once(this._stream, "drain");
 
     while (this._queue.length) {
       const data = this._queue.shift();
-      this._size -= this._stream.writableObjectMode ? 1 : (<string | Buffer>data).length ?? (<DataView>data).byteLength ?? 0;
-      if (!this._stream.write(data, encoding ?? 'utf-8')) {
-        await once(this._stream, 'drain');
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      this._size -= this._stream.writableObjectMode ? 1 : (data as string | Buffer).length ?? (data as DataView).byteLength ?? 0;
+      if (!this._stream.write(data, encoding ?? "utf-8")) {
+        await once(this._stream, "drain");
       }
     }
   }
