@@ -11,13 +11,11 @@ interface ConfigEvents {
 class Config extends EventEmitter<ConfigEvents> {
 
   protected _errorHandler: ErrorHandler;
-  protected _maxListeners: number;
   protected _debug: boolean;
 
   constructor() {
     super();
     this._errorHandler = console.error;
-    this._maxListeners = EventEmitter.defaultMaxListeners;
     this._debug = false;
   }
 
@@ -28,15 +26,6 @@ class Config extends EventEmitter<ConfigEvents> {
   set errorHandler(errorHandler: ErrorHandler) {
     this._errorHandler = errorHandler;
     this.emit('errorHandler', this._errorHandler);
-  }
-
-  get maxListeners(): number {
-    return this._maxListeners;
-  }
-
-  set maxListeners(maxListeners: number) {
-    this._maxListeners = maxListeners;
-    this.emit('maxListeners', this._maxListeners);
   }
 
   get debug() {

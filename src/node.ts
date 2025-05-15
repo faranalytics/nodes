@@ -4,13 +4,16 @@ import Config from './config.js';
 import { ErrorHandler } from './config.js';
 import * as crypto from 'node:crypto';
 
+const $streams = Symbol('nodes');
+
 export interface NodeOptions {
   id: string;
-  errorHandler: ErrorHandler;
-  maxListeners: number;
+  errorHandler?: ErrorHandler;
 }
 
 export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Readable> {
+
+  static [$streams] = new WeakSet<Writable | Readable>;
 
   protected _stream: StreamT;
   protected _queue: Array<InT>;
@@ -24,11 +27,26 @@ export class Node<InT, OutT, StreamT extends Writable | Readable = Writable | Re
     this._size = 0;
     this._id = options?.id ?? crypto.randomUUID();
     this._errorHandler = options?.errorHandler ?? Config.errorHandler;
-    stream.setMaxListeners(options?.maxListeners ?? Config.maxListeners);
 
-    this._stream.on('unpipe', (readable: Readable) => {
-      readable.resume();
-    });
+    Node[$streams].add(stream);
+
+    if (this._stream instanceof Writable) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      this._stream.on('pipe', (readable: Readable) => {
+        this._stream.setMaxListeners(this._stream.getMaxListeners() + 1);
+        if (Node[$streams].has(readable)) {
+          readable.setMaxListeners(readable.getMaxListeners() + 1);
+        }
+      });
+
+      this._stream.on('unpipe', (readable: Readable) => {
+        readable.resume();
+        this._stream.setMaxListeners(this._stream.getMaxListeners() - 1);
+        if (Node[$streams].has(readable)) {
+          readable.setMaxListeners(readable.getMaxListeners() - 1);
+        }
+      });
+    }
 
     this._stream.once('error', (err: Error) => {
       if (Config.debug && this._errorHandler) {
