@@ -21,16 +21,14 @@
   },
   "homepage": "https://github.com/faranalytics/nodes#readme",
   "engines": {
-    "npm": ">=10.2.3",
+    "npm": ">=10.8.2",
     "node": ">=18.20.4"
   },
   "devDependencies": {
-    "@eslint/js": "^9.6.0",
-    "@types/eslint__js": "^8.42.3",
+    "@stylistic/eslint-plugin-ts": "^4.2.0",
     "@types/node": "^20.11.28",
-    "eslint": "^8.57.0",
-    "typescript": "^5.5.3",
-    "typescript-eslint": "^7.15.0"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.29.0"
   },
   "keywords": [
     "graph",
