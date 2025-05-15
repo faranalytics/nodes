@@ -2,34 +2,51 @@ import EventEmitter from 'node:events';
 
 export type ErrorHandler = (err: Error, ...params: Array<unknown>) => void;
 
-class Config extends EventEmitter {
+interface ConfigEvents {
+  errorHandler: [ErrorHandler];
+  maxListeners: [number];
+  debug: [boolean];
+}
 
-    protected _errorHandler: ErrorHandler;
-    protected _debug: boolean;
+class Config extends EventEmitter<ConfigEvents> {
 
-    constructor() {
-        super();
-        this._errorHandler = console.error;
-        this._debug = false;
-    }
+  protected _errorHandler: ErrorHandler;
+  protected _maxListeners: number;
+  protected _debug: boolean;
 
-    get errorHandler() {
-        return this._errorHandler;
-    }
+  constructor() {
+    super();
+    this._errorHandler = console.error;
+    this._maxListeners = EventEmitter.defaultMaxListeners;
+    this._debug = false;
+  }
 
-    set errorHandler(errorHandler: ErrorHandler) {
-        this._errorHandler = errorHandler;
-        this.emit('errorHandler', this._errorHandler);
-    }
+  get errorHandler(): ErrorHandler {
+    return this._errorHandler;
+  }
 
-    get debug() {
-        return this._debug;
-    }
+  set errorHandler(errorHandler: ErrorHandler) {
+    this._errorHandler = errorHandler;
+    this.emit('errorHandler', this._errorHandler);
+  }
 
-    set debug(debug: boolean) {
-        this._debug = debug;
-        this.emit('debug', this._debug);
-    }
+  get maxListeners(): number {
+    return this._maxListeners;
+  }
+
+  set maxListeners(maxListeners: number) {
+    this._maxListeners = maxListeners;
+    this.emit('maxListeners', this._maxListeners);
+  }
+
+  get debug() {
+    return this._debug;
+  }
+
+  set debug(debug: boolean) {
+    this._debug = debug;
+    this.emit('debug', this._debug);
+  }
 }
 
 export default new Config();
